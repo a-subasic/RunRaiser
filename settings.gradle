@@ -1,0 +1,2 @@
+rootProject.name='RunRaiser'
+include ':app'
