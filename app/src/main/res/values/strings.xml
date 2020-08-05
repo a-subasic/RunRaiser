@@ -16,4 +16,23 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="email">E-mail</string>
+    <string name="password">Password</string>
+    <string name="arrow_back">Back</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="logo_icon">logo</string>
+    <string name="or">or</string>
+    <string name="sign_up">Sign up</string>
+    <string name="login">Login</string>
+    <string name="don_t_have_an_account_sign_up_here">Don\'t have an account? Sign up here</string>
+    <string name="fullName">Full Name</string>
+    <string name="username">Username</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="sign_in_here">Already have an account? Login here</string>
+    <string name="verify_email_message">E-mail not verified. Please verify it to continue.</string>
+    <string name="verify_email_btn">I have verified my e-mail</string>
+    <string name="resend_email_btn">Resend e-mail</string>
+    <string name="resend_email">Enter your email and we\'ll send you a link to get back into your account.</string>
+    <string name="reset_password">Reset password</string>
+    <string name="remember_me">Remember me</string>
 </resources>
