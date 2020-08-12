@@ -31,7 +31,10 @@ import com.google.gson.Gson
 import kotlinx.android.synthetic.main.fragment_home.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.util.*
+import kotlin.math.roundToInt
 
 class HomeFragment : Fragment(), OnMapReadyCallback {
 
@@ -162,9 +165,20 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         mMap.addPolyline(lineoption)
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(end, 25.0f))
         distance += distance_tmp
+//        distance /= 1000
         speed = (distance_tmp * 3.6).toFloat()
-        tv_distance.text = distance.toString()
-        tv_speed.text = speed.toString()
+//        speed = ((speed * 100).roundToInt() /100).toFloat()
+        if(distance > 999) {
+            distance /= 1000
+            distance = BigDecimal(distance.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
+            tv_distance.text = distance.toString() + " km"
+        }
+        else {
+            distance = BigDecimal(distance.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
+            tv_distance.text = distance.toString() + " m"
+        }
+        speed = BigDecimal(speed.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
+        tv_speed.text = speed.toString() + " km/h"
         previousLatLng = end
     }
 
