@@ -40,6 +40,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     private lateinit var previousLatLng: LatLng
     private lateinit var currentLatLng: LatLng
+    private var distance: Float = 0F
+    private var speed: Float = 0F
 
 //    private var location1: LatLng = LatLng(45.330992, 14.430281)
 //    private var location2: LatLng = LatLng(45.240600, 14.397654)
@@ -65,6 +67,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         var stopTime: Long = 0
         var timer: Timer? = null
         start.setOnClickListener {
+            tv_distance.text = distance.toString()
+            tv_speed.text = speed.toString()
             chronometer.base = SystemClock.elapsedRealtime()+stopTime
             chronometer.start()
             timer = Timer()
@@ -147,8 +151,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         val location2 = Location("locationB")
         location2.latitude = end.latitude
         location2.longitude = end.longitude
-        val distance = location1.distanceTo(location2)
-        println(distance*1000)
+        val distance_tmp = location1.distanceTo(location2)
+//        println(distance*1000)
 
         val lineoption = PolylineOptions()
         lineoption.add(start, end)
@@ -157,6 +161,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         lineoption.geodesic(true)
         mMap.addPolyline(lineoption)
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(end, 25.0f))
+        distance += distance_tmp
+        speed = (distance_tmp * 3.6).toFloat()
+        tv_distance.text = distance.toString()
+        tv_speed.text = speed.toString()
         previousLatLng = end
     }
 
