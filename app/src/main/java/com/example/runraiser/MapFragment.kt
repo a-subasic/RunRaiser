@@ -1,10 +1,16 @@
 package com.example.runraiser
 
 import android.os.Bundle
+import android.os.Looper
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -28,6 +34,28 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         super.onViewCreated(view, savedInstanceState)
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        val locationRequest = LocationRequest()
+        locationRequest.interval = 10000
+        locationRequest.fastestInterval = 3000
+        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        Log.d("latitude", "s")
+        Log.d("longitude", "s")
+
+        LocationServices.getFusedLocationProviderClient(requireContext()).requestLocationUpdates(locationRequest, object:
+            LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                super.onLocationResult(locationResult)
+                LocationServices.getFusedLocationProviderClient(requireContext()).removeLocationUpdates(this)
+                if(locationResult != null && locationResult.locations.size > 0) {
+                    val latestLocationIndex = locationResult.locations.size-1
+                    val latitude = locationResult.locations[latestLocationIndex].latitude
+                    val longitude = locationResult.locations[latestLocationIndex].longitude
+                    Log.d("latitude", latitude.toString())
+                    Log.d("longitude", longitude.toString())
+                }
+            }
+        }, Looper.getMainLooper())
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
