@@ -165,13 +165,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         mMap.addPolyline(lineoption)
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(end, 25.0f))
         distance += distance_tmp
-//        distance /= 1000
         speed = (distance_tmp * 3.6).toFloat()
-//        speed = ((speed * 100).roundToInt() /100).toFloat()
         if(distance > 999) {
-            distance /= 1000
-            distance = BigDecimal(distance.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
-            tv_distance.text = distance.toString() + " km"
+            var distance_km = distance/1000
+            distance_km = BigDecimal(distance_km.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
+            tv_distance.text = distance_km.toString() + " km"
         }
         else {
             distance = BigDecimal(distance.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
