@@ -2,10 +2,8 @@ package com.example.runraiser.ui.home
 
 import android.content.ContentResolver
 import android.content.ContentValues
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.graphics.drawable.BitmapDrawable
 import android.location.Location
 import android.net.Uri
 import android.os.*
@@ -13,34 +11,31 @@ import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import com.example.runraiser.R
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
+import com.google.android.gms.maps.model.LatLngBounds.Builder
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
-import com.google.android.gms.maps.model.PolylineOptions
+import com.google.android.gms.maps.model.*
+import com.google.api.Context
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.fragment_home.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 import java.io.OutputStream
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.*
+import kotlin.concurrent.schedule
+
 
 class HomeFragment : Fragment(), OnMapReadyCallback {
 
@@ -56,6 +51,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 //    private var location2: LatLng = LatLng(45.240600, 14.397654)
     private var location1: LatLng = LatLng(13.0356745, 77.5881522)
     private var location2: LatLng = LatLng(13.029727, 77.5933021)
+    private var latLngArray: ArrayList<LatLng> = ArrayList()
     private lateinit var marker: Marker
 
     override fun onCreateView(
@@ -91,10 +87,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             timer!!.schedule(task, 0, 1000)
         }
         stop.setOnClickListener {
+            latLngArray.add(currentLatLng)
             stopTime = chronometer.base-SystemClock.elapsedRealtime()
+            zoomRoute(mMap, latLngArray)
             chronometer.stop()
             timer?.cancel()
-            snapShot()
         }
     }
 
@@ -124,6 +121,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     // Add a marker in Sydney and move the camera
                     val sydney = LatLng(latitude, longitude)
                     previousLatLng = sydney
+                    latLngArray.add(previousLatLng)
                     marker = mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 25.0f))
                 }
@@ -146,7 +144,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     val latestLocationIndex = locationResult.locations.size-1
                     val latitude = locationResult.locations[latestLocationIndex].latitude
                     val longitude = locationResult.locations[latestLocationIndex].longitude
-                    val currentLatLng = LatLng(latitude, longitude)
+                    currentLatLng = LatLng(latitude, longitude)
                     marker.position = currentLatLng
                     distance(previousLatLng, currentLatLng)
                 }
@@ -155,6 +153,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun distance(start: LatLng, end: LatLng) {
+        latLngArray.add(start)
         val location1 = Location("locationA")
         location1.latitude = start.latitude
         location1.longitude = start.longitude
@@ -301,6 +300,24 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             }
         } finally {
             imageOutStream?.close()
+        }
+    }
+
+    private fun zoomRoute(
+        googleMap: GoogleMap?,
+        lstLatLngRoute: ArrayList<LatLng>
+    ) {
+        if (googleMap == null || lstLatLngRoute.isEmpty()) return
+        val boundsBuilder: LatLngBounds.Builder = Builder()
+        for (latLngPoint in lstLatLngRoute) boundsBuilder.include(
+            latLngPoint
+        )
+        val routePadding = 100
+        val latLngBounds: LatLngBounds = boundsBuilder.build()
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds, routePadding))
+        googleMap.setPadding(10,10,10,10)
+        Timer("Loading Map", false).schedule(2000) {
+            snapShot()
         }
     }
 }
