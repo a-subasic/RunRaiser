@@ -1,18 +1,21 @@
 package com.example.runraiser.ui.home
 
+import android.content.ContentResolver
+import android.content.ContentValues
+import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.drawable.BitmapDrawable
 import android.location.Location
-import android.os.AsyncTask
-import android.os.Bundle
-import android.os.Looper
-import android.os.SystemClock
-import android.util.Log
+import android.net.Uri
+import android.os.*
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.example.runraiser.R
 import com.google.android.gms.location.LocationCallback
@@ -31,10 +34,13 @@ import com.google.gson.Gson
 import kotlinx.android.synthetic.main.fragment_home.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.*
-import kotlin.math.roundToInt
 
 class HomeFragment : Fragment(), OnMapReadyCallback {
 
@@ -88,6 +94,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             stopTime = chronometer.base-SystemClock.elapsedRealtime()
             chronometer.stop()
             timer?.cancel()
+            snapShot()
         }
     }
 
@@ -228,7 +235,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     }
 
     fun decodePolyline(encoded: String): List<LatLng> {
-
         val poly = ArrayList<LatLng>()
         var index = 0
         val len = encoded.length
@@ -262,6 +268,40 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         }
 
         return poly
+    }
+
+    private fun snapShot() {
+        val callback: GoogleMap.SnapshotReadyCallback = object : GoogleMap.SnapshotReadyCallback {
+            var bitmap: Bitmap? = null
+            override fun onSnapshotReady(snapshot: Bitmap) {
+                bitmap = snapshot
+                saveImage(bitmap!!)
+            }
+        }
+        mMap.snapshot(callback)
+    }
+
+    @Throws(IOException::class)
+    private fun saveImage(bitmap: Bitmap) {
+        val contentValues = ContentValues()
+        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, "myImage.png")
+        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
+        contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+        val resolver: ContentResolver? = context?.contentResolver
+        val uri: Uri? =
+            resolver?.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+        var imageOutStream: OutputStream? = null
+        try {
+            if (uri == null) {
+                throw IOException("Failed to insert MediaStore row")
+            }
+            imageOutStream = resolver.openOutputStream(uri)
+            if (!bitmap.compress(Bitmap.CompressFormat.JPEG, 100, imageOutStream)) {
+                throw IOException("Failed to compress bitmap")
+            }
+        } finally {
+            imageOutStream?.close()
+        }
     }
 }
 

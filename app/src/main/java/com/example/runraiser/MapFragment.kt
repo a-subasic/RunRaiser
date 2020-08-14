@@ -39,8 +39,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         locationRequest.interval = 10000
         locationRequest.fastestInterval = 3000
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        Log.d("latitude", "s")
-        Log.d("longitude", "s")
 
         LocationServices.getFusedLocationProviderClient(requireContext()).requestLocationUpdates(locationRequest, object:
             LocationCallback() {
@@ -51,8 +49,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     val latestLocationIndex = locationResult.locations.size-1
                     val latitude = locationResult.locations[latestLocationIndex].latitude
                     val longitude = locationResult.locations[latestLocationIndex].longitude
-                    Log.d("latitude", latitude.toString())
-                    Log.d("longitude", longitude.toString())
                 }
             }
         }, Looper.getMainLooper())
