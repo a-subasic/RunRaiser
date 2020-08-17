@@ -8,11 +8,13 @@ import android.location.Location
 import android.net.Uri
 import android.os.*
 import android.provider.MediaStore
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
+import com.example.runraiser.Firebase
 import com.example.runraiser.R
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -25,6 +27,7 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.api.Context
+import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.fragment_home.*
 import okhttp3.OkHttpClient
@@ -290,6 +293,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         val uri: Uri? =
             resolver?.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
         var imageOutStream: OutputStream? = null
+        println(uri)
+
         try {
             if (uri == null) {
                 throw IOException("Failed to insert MediaStore row")
@@ -300,6 +305,37 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             }
         } finally {
             imageOutStream?.close()
+            if (uri != null) {
+                uploadProfilePhotoToFirebaseStorage(uri)
+            }
+        }
+    }
+
+    private fun uploadProfilePhotoToFirebaseStorage(uri: Uri) {
+        val refStorage =
+            FirebaseStorage.getInstance().getReference("/images/maps_screenshots/myImage")
+
+        refStorage.putFile(uri)
+            .addOnSuccessListener { task ->
+                Log.d(tag, "Successfully uploaded image: ${task.metadata?.path}")
+
+                refStorage.downloadUrl.addOnSuccessListener {
+                    Log.d(tag, "File location: $it")
+
+                    saveProfilePhotoToFirebaseDatabase(it.toString())
+                }
+            }
+            .addOnFailureListener {
+                Log.d(tag, it.message.toString())
+            }
+    }
+
+    private fun saveProfilePhotoToFirebaseDatabase(profileImageUrl: String) {
+        val ref = Firebase.database?.getReference("/Users/${Firebase.auth?.currentUser?.uid}")
+        ref?.child("profilePhotoUrl")?.setValue(profileImageUrl)?.addOnSuccessListener {
+            Log.d(tag, "Saved profile photo to firebase database")
+        }?.addOnFailureListener {
+            Log.d(tag, "Failed to save profile photo firebase database")
         }
     }
 
