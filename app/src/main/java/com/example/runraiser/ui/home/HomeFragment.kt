@@ -1,5 +1,6 @@
 package com.example.runraiser.ui.home
 
+import android.app.AlertDialog
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.graphics.Bitmap
@@ -26,10 +27,10 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
-import com.google.api.Context
 import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.fragment_home.*
+import kotlinx.android.synthetic.main.trainig_setup_dialog.view.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
@@ -48,13 +49,17 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private lateinit var previousLatLng: LatLng
     private lateinit var currentLatLng: LatLng
     private var distance: Float = 0F
+    private var distanceKm: Float = 0F
     private var speed: Float = 0F
+    private lateinit var trainingId: String
+    private var timesRan: Int = 0
 
-//    private var location1: LatLng = LatLng(45.330992, 14.430281)
+    //    private var location1: LatLng = LatLng(45.330992, 14.430281)
 //    private var location2: LatLng = LatLng(45.240600, 14.397654)
     private var location1: LatLng = LatLng(13.0356745, 77.5881522)
     private var location2: LatLng = LatLng(13.029727, 77.5933021)
     private var latLngArray: ArrayList<LatLng> = ArrayList()
+    private var speedArray: ArrayList<Float> = ArrayList()
     private lateinit var marker: Marker
 
     override fun onCreateView(
@@ -74,27 +79,65 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
         var stopTime: Long = 0
         var timer: Timer? = null
-        start.setOnClickListener {
-            tv_distance.text = distance.toString()
-            tv_speed.text = speed.toString()
-            chronometer.base = SystemClock.elapsedRealtime()+stopTime
-            chronometer.start()
-            timer = Timer()
-            val task = object: TimerTask() {
-                var timesRan = 0
-                override fun run() {
-                    println("timer passed ${++timesRan} time(s)")
-                    calculateLatLng()
+        start_btn.setOnClickListener {
+            val mDialogView = LayoutInflater.from(context).inflate(R.layout.trainig_setup_dialog, null)
+            val mBuilder = AlertDialog.Builder(context)
+                .setView(mDialogView)
+                .setTitle("Training Setup")
+
+            val  mAlertDialog = mBuilder.show()
+            //login button click of custom layout
+            mDialogView.ok_btn.setOnClickListener {
+                //dismiss dialog
+                mAlertDialog.dismiss()
+                //get text from EditTexts of custom layout
+                trainingId = UUID.randomUUID().toString().replace("-", "").toUpperCase(Locale.ROOT)
+                val kilometers = mDialogView.et_kilometers.text.toString().toInt()
+                val value = mDialogView.et_value.text.toString().toInt()
+
+                val training =
+                    Firebase.auth?.uid?.let { it1 -> Training(trainingId, it1, kilometers, value) }
+
+                Firebase.databaseTrainings
+                    ?.child(trainingId)
+                    ?.setValue(training)
+
+                start_btn.visibility = View.GONE
+                training_content.visibility = View.VISIBLE
+
+                tv_distance.text = distance.toString()
+                tv_speed.text = speed.toString()
+                chronometer.base = SystemClock.elapsedRealtime()+stopTime
+                chronometer.start()
+                timer = Timer()
+                val task = object: TimerTask() {
+                    override fun run() {
+                        println("timer passed ${++timesRan} time(s)")
+                        calculateLatLng()
+                    }
+                }
+                timer!!.schedule(task, 0, 1000)
+
+                stop_btn.setOnClickListener {
+                    latLngArray.add(currentLatLng)
+                    stopTime = chronometer.base-SystemClock.elapsedRealtime()
+                    zoomRoute(mMap, latLngArray)
+                    chronometer.stop()
+                    timer?.cancel()
+
+                    val ref = Firebase.database?.getReference("/Trainings/${trainingId}")
+                    ref?.child("time")?.setValue(chronometer.text.toString())
+
+                    start_btn.visibility = View.VISIBLE
+                    training_content.visibility = View.GONE
                 }
             }
-            timer!!.schedule(task, 0, 1000)
-        }
-        stop.setOnClickListener {
-            latLngArray.add(currentLatLng)
-            stopTime = chronometer.base-SystemClock.elapsedRealtime()
-            zoomRoute(mMap, latLngArray)
-            chronometer.stop()
-            timer?.cancel()
+            //cancel button click of custom layout
+            mDialogView.cancel_btn.setOnClickListener {
+                //dismiss dialog
+                mAlertDialog.dismiss()
+            }
+
         }
     }
 
@@ -174,17 +217,19 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         mMap.addPolyline(lineoption)
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(end, 25.0f))
         distance += distance_tmp
+        distanceKm = distance/1000
         speed = (distance_tmp * 3.6).toFloat()
         if(distance > 999) {
-            var distance_km = distance/1000
-            distance_km = BigDecimal(distance_km.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
-            tv_distance.text = distance_km.toString() + " km"
+            distanceKm = distance/1000
+            distanceKm = BigDecimal(distanceKm.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
+            tv_distance.text = distanceKm.toString() + " km"
         }
         else {
             distance = BigDecimal(distance.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
             tv_distance.text = distance.toString() + " m"
         }
         speed = BigDecimal(speed.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
+        speedArray.add(speed)
         tv_speed.text = speed.toString() + " km/h"
         previousLatLng = end
     }
@@ -313,7 +358,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     private fun uploadProfilePhotoToFirebaseStorage(uri: Uri) {
         val refStorage =
-            FirebaseStorage.getInstance().getReference("/images/maps_screenshots/myImage")
+            FirebaseStorage.getInstance().getReference("/images/maps_screenshots/${trainingId}")
 
         refStorage.putFile(uri)
             .addOnSuccessListener { task ->
@@ -330,13 +375,15 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             }
     }
 
-    private fun saveProfilePhotoToFirebaseDatabase(profileImageUrl: String) {
-        val ref = Firebase.database?.getReference("/Users/${Firebase.auth?.currentUser?.uid}")
-        ref?.child("profilePhotoUrl")?.setValue(profileImageUrl)?.addOnSuccessListener {
+    private fun saveProfilePhotoToFirebaseDatabase(trainingImageUrl: String) {
+        val ref = Firebase.database?.getReference("/Trainings/${trainingId}")
+        ref?.child("trainingMapScreenshot")?.setValue(trainingImageUrl)?.addOnSuccessListener {
             Log.d(tag, "Saved profile photo to firebase database")
         }?.addOnFailureListener {
             Log.d(tag, "Failed to save profile photo firebase database")
         }
+        ref?.child("distance")?.setValue(distanceKm)
+        ref?.child("avgSpeed")?.setValue(speedArray.average())
     }
 
     private fun zoomRoute(
@@ -357,5 +404,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         }
     }
 }
+
+class Training(val id: String, val userId: String, val kilometers: Int, val value: Int)
 
 

@@ -36,4 +36,9 @@
     <string name="reset_password">Reset password</string>
     <string name="remember_me">Remember me</string>
     <string name="start">Start</string>
+    <string name="kilometers">Kilometers</string>
+    <string name="value_of_one_kilometer">Value of one kilometer (kn)</string>
+    <string name="desired_mileage">Desired mileage (km)</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
 </resources>
