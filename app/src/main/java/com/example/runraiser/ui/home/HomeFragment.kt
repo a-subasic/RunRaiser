@@ -35,6 +35,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
 import java.io.OutputStream
+import java.lang.Math.floor
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.*
@@ -54,10 +55,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private lateinit var trainingId: String
     private var timesRan: Int = 0
 
-    //    private var location1: LatLng = LatLng(45.330992, 14.430281)
-//    private var location2: LatLng = LatLng(45.240600, 14.397654)
-    private var location1: LatLng = LatLng(13.0356745, 77.5881522)
-    private var location2: LatLng = LatLng(13.029727, 77.5933021)
     private var latLngArray: ArrayList<LatLng> = ArrayList()
     private var speedArray: ArrayList<Float> = ArrayList()
     private lateinit var marker: Marker
@@ -104,6 +101,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
                 start_btn.visibility = View.GONE
                 training_content.visibility = View.VISIBLE
+                stop_btn.visibility = View.VISIBLE
+                reset_btn.visibility = View.GONE
 
                 tv_distance.text = distance.toString()
                 tv_speed.text = speed.toString()
@@ -119,6 +118,30 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 timer!!.schedule(task, 0, 1000)
 
                 stop_btn.setOnClickListener {
+                    val raisedVal = (kotlin.math.floor(distanceKm) * value.toDouble()).toInt()
+                    println(raisedVal)
+                    val raisedAlert = AlertDialog.Builder(context)
+
+                    if(raisedVal > 0) {
+                        raisedAlert.setTitle("Congratulations!")
+                            ?.setMessage("You raised $raisedVal kn!")
+                            ?.setPositiveButton("OK :)") { dialog, _ ->
+                                stop_btn.visibility = View.GONE
+                                reset_btn.visibility = View.VISIBLE
+                                dialog.cancel()
+                            }?.setCancelable(false)
+                            ?.show()
+                    }
+                    else {
+                        raisedAlert.setTitle("Oh no!")
+                            ?.setMessage("Unfortunately you didn’t run enough mileage to raise money.")
+                            ?.setPositiveButton("OK :(") { dialog, _ ->
+                                stop_btn.visibility = View.GONE
+                                reset_btn.visibility = View.VISIBLE
+                                dialog.cancel()
+                            }?.setCancelable(false)
+                            ?.show()
+                    }
                     latLngArray.add(currentLatLng)
                     stopTime = chronometer.base-SystemClock.elapsedRealtime()
                     zoomRoute(mMap, latLngArray)
@@ -127,9 +150,38 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
                     val ref = Firebase.database?.getReference("/Trainings/${trainingId}")
                     ref?.child("time")?.setValue(chronometer.text.toString())
-
-                    start_btn.visibility = View.VISIBLE
+                    ref?.child("moneyRaised")?.setValue(raisedVal)
+                }
+                reset_btn.setOnClickListener {
                     training_content.visibility = View.GONE
+                    start_btn.visibility = View.VISIBLE
+                    reset_btn.visibility = View.GONE
+
+                    mMap.clear()
+
+                    val locationRequest = LocationRequest()
+                    locationRequest.interval = 10000
+                    locationRequest.fastestInterval = 3000
+                    locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+
+                    LocationServices.getFusedLocationProviderClient(requireContext()).requestLocationUpdates(locationRequest, object:
+                        LocationCallback() {
+                        override fun onLocationResult(locationResult: LocationResult) {
+                            super.onLocationResult(locationResult)
+                            LocationServices.getFusedLocationProviderClient(requireContext()).removeLocationUpdates(this)
+                            if(locationResult.locations.size > 0) {
+                                val latestLocationIndex = locationResult.locations.size-1
+                                val latitude = locationResult.locations[latestLocationIndex].latitude
+                                val longitude = locationResult.locations[latestLocationIndex].longitude
+                                // Add a marker in Sydney and move the camera
+                                val sydney = LatLng(latitude, longitude)
+                                previousLatLng = sydney
+                                latLngArray.add(previousLatLng)
+                                marker = mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
+                                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 25.0f))
+                            }
+                        }
+                    }, Looper.getMainLooper())
                 }
             }
             //cancel button click of custom layout
@@ -331,7 +383,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     @Throws(IOException::class)
     private fun saveImage(bitmap: Bitmap) {
         val contentValues = ContentValues()
-        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, "myImage.png")
+        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, "myImage${trainingId}.png")
         contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
         contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
         val resolver: ContentResolver? = context?.contentResolver
@@ -384,6 +436,13 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         }
         ref?.child("distance")?.setValue(distanceKm)
         ref?.child("avgSpeed")?.setValue(speedArray.average())
+
+        distance = 0F
+        distanceKm = 0F
+        speed = 0F
+        timesRan = 0
+        latLngArray = ArrayList()
+        speedArray = ArrayList()
     }
 
     private fun zoomRoute(
