@@ -35,9 +35,11 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
 import java.io.OutputStream
-import java.lang.Math.floor
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.concurrent.schedule
 
@@ -101,8 +103,18 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     }
                     else -> {
                         mAlertDialog.dismiss()
+                        var startDate: String?
+                        startDate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            val current = LocalDateTime.now()
+                            val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
+                            current.format(formatter)
+                        } else {
+                            val date = Date()
+                            val formatter = SimpleDateFormat("dd.MM.yyyy HH:mm")
+                            formatter.format(date)
+                        }
                         val training =
-                            Firebase.auth?.uid?.let { it1 -> Training(trainingId, it1, kilometers, valueKn) }
+                            Firebase.auth?.uid?.let { it1 -> Training(trainingId, it1, kilometers, valueKn, startDate) }
 
                         Firebase.databaseTrainings
                             ?.child(trainingId)
@@ -439,14 +451,29 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun saveProfilePhotoToFirebaseDatabase(trainingImageUrl: String) {
+        val endDate: String?
+        endDate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val current = LocalDateTime.now()
+            val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
+            current.format(formatter)
+        } else {
+            val date = Date()
+            val formatter = SimpleDateFormat("dd.MM.yyyy HH:mm")
+            formatter.format(date)
+        }
+
         val ref = Firebase.database?.getReference("/Trainings/${trainingId}")
         ref?.child("trainingMapScreenshot")?.setValue(trainingImageUrl)?.addOnSuccessListener {
             Log.d(tag, "Saved profile photo to firebase database")
         }?.addOnFailureListener {
             Log.d(tag, "Failed to save profile photo firebase database")
         }
-        ref?.child("distance")?.setValue(distanceKm)
-        ref?.child("avgSpeed")?.setValue(speedArray.average())
+        if(distanceKm < 1) {
+            distanceKm = BigDecimal(distanceKm.toDouble()).setScale(3, RoundingMode.HALF_EVEN).toFloat()
+        }
+        ref?.child("distanceKm")?.setValue(distanceKm.toString())
+        ref?.child("avgSpeed")?.setValue(BigDecimal(speedArray.average()).setScale(2, RoundingMode.HALF_EVEN).toFloat().toString())
+        ref?.child("endDate")?.setValue(endDate)
 
         distance = 0F
         distanceKm = 0F
@@ -475,6 +502,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     }
 }
 
-class Training(val id: String, val userId: String, val kilometers: Int, val value: Int)
+class Training(
+    val id: String,
+    val userId: String,
+    val kilometers: Int,
+    val value: Int,
+    val startDate: String
+)
 
 
