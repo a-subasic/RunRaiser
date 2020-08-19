@@ -85,40 +85,51 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             val  mAlertDialog = mBuilder.show()
             //login button click of custom layout
             mDialogView.ok_btn.setOnClickListener {
-                //dismiss dialog
-                mAlertDialog.dismiss()
                 //get text from EditTexts of custom layout
                 trainingId = UUID.randomUUID().toString().replace("-", "").toUpperCase(Locale.ROOT)
                 val kilometers = mDialogView.et_kilometers.text.toString().toInt()
-                val value = mDialogView.et_value.text.toString().toInt()
+                val valueKn = mDialogView.et_value.text.toString().toInt()
 
-                val training =
-                    Firebase.auth?.uid?.let { it1 -> Training(trainingId, it1, kilometers, value) }
+                when {
+                    kilometers > 80 -> {
+                        mDialogView.et_kilometers.error = "Maximum is 80km"
+                        mDialogView.et_kilometers.requestFocus()
+                    }
+                    valueKn > 100 -> {
+                        mDialogView.et_value.error = "Maximum is 100kn"
+                        mDialogView.et_value.requestFocus()
+                    }
+                    else -> {
+                        mAlertDialog.dismiss()
+                        val training =
+                            Firebase.auth?.uid?.let { it1 -> Training(trainingId, it1, kilometers, valueKn) }
 
-                Firebase.databaseTrainings
-                    ?.child(trainingId)
-                    ?.setValue(training)
+                        Firebase.databaseTrainings
+                            ?.child(trainingId)
+                            ?.setValue(training)
 
-                start_btn.visibility = View.GONE
-                training_content.visibility = View.VISIBLE
-                stop_btn.visibility = View.VISIBLE
-                reset_btn.visibility = View.GONE
+                        start_btn.visibility = View.GONE
+                        training_content.visibility = View.VISIBLE
+                        stop_btn.visibility = View.VISIBLE
+                        reset_btn.visibility = View.GONE
 
-                tv_distance.text = distance.toString()
-                tv_speed.text = speed.toString()
-                chronometer.base = SystemClock.elapsedRealtime()+stopTime
-                chronometer.start()
-                timer = Timer()
-                val task = object: TimerTask() {
-                    override fun run() {
-                        println("timer passed ${++timesRan} time(s)")
-                        calculateLatLng()
+                        tv_distance.text = distance.toString()
+                        tv_speed.text = speed.toString()
+                        chronometer.base = SystemClock.elapsedRealtime()+stopTime
+                        chronometer.start()
+                        timer = Timer()
+                        val task = object: TimerTask() {
+                            override fun run() {
+                                println("timer passed ${++timesRan} time(s)")
+                                calculateLatLng()
+                            }
+                        }
+                        timer!!.schedule(task, 0, 1000)
                     }
                 }
-                timer!!.schedule(task, 0, 1000)
 
                 stop_btn.setOnClickListener {
-                    val raisedVal = (kotlin.math.floor(distanceKm) * value.toDouble()).toInt()
+                    val raisedVal = (kotlin.math.floor(distanceKm) * valueKn.toDouble()).toInt()
                     println(raisedVal)
                     val raisedAlert = AlertDialog.Builder(context)
 
