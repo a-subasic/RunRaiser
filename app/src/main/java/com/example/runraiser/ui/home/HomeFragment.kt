@@ -15,6 +15,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
+import com.example.runraiser.ActiveUsersDataCallback
 import com.example.runraiser.Firebase
 import com.example.runraiser.R
 import com.google.android.gms.location.LocationCallback
@@ -41,6 +42,7 @@ import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.concurrent.schedule
 
 
@@ -60,6 +62,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private var latLngArray: ArrayList<LatLng> = ArrayList()
     private var speedArray: ArrayList<Float> = ArrayList()
     private lateinit var marker: Marker
+    val userId = Firebase.auth!!.currentUser!!.uid
 
     override fun onCreateView(
             inflater: LayoutInflater,
@@ -75,6 +78,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         super.onViewCreated(view, savedInstanceState)
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        ActiveUsersData.getActiveUsersData(object: ActiveUsersDataCallback {
+            override fun onActiveUsersDataCallback(activeUsersData: ArrayList<ActiveUser>) {
+                println(activeUsersData)
+            }
+        })
 
         var stopTime: Long = 0
         var timer: Timer? = null
@@ -120,6 +129,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                             ?.child(trainingId)
                             ?.setValue(training)
 
+                        Firebase.databaseUsers!!.child(userId).child("isInTraining").setValue(true)
+
                         start_btn.visibility = View.GONE
                         training_content.visibility = View.VISIBLE
                         stop_btn.visibility = View.VISIBLE
@@ -142,8 +153,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
                 stop_btn.setOnClickListener {
                     val raisedVal = (kotlin.math.floor(distanceKm) * valueKn.toDouble()).toInt()
-                    println(raisedVal)
                     val raisedAlert = AlertDialog.Builder(context)
+                    Firebase.databaseUsers!!.child(userId).child("isInTraining").setValue(false)
 
                     if(raisedVal > 0) {
                         raisedAlert.setTitle("Congratulations!")
@@ -266,6 +277,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     val latitude = locationResult.locations[latestLocationIndex].latitude
                     val longitude = locationResult.locations[latestLocationIndex].longitude
                     currentLatLng = LatLng(latitude, longitude)
+                    Firebase.databaseUsers!!.child(userId).child("lastLat").setValue(currentLatLng.latitude)
+                    Firebase.databaseUsers!!.child(userId).child("lastLng").setValue(currentLatLng.longitude)
                     marker.position = currentLatLng
                     distance(previousLatLng, currentLatLng)
                 }
@@ -282,7 +295,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         location2.latitude = end.latitude
         location2.longitude = end.longitude
         val distance_tmp = location1.distanceTo(location2)
-//        println(distance*1000)
 
         val lineoption = PolylineOptions()
         lineoption.add(start, end)
