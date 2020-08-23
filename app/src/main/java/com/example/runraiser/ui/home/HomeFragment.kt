@@ -62,6 +62,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private var latLngArray: ArrayList<LatLng> = ArrayList()
     private var speedArray: ArrayList<Float> = ArrayList()
     private lateinit var marker: Marker
+    private var tmpMarker: Marker? = null
     val userId = Firebase.auth!!.currentUser!!.uid
 
     override fun onCreateView(
@@ -144,6 +145,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                         val task = object: TimerTask() {
                             override fun run() {
                                 println("timer passed ${++timesRan} time(s)")
+//                                displayActiveUsers()
                                 calculateLatLng()
                             }
                         }
@@ -212,7 +214,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                                 previousLatLng = sydney
                                 latLngArray.add(previousLatLng)
                                 marker = mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-                                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 25.0f))
+//                                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 25.0f))
                             }
                         }
                     }, Looper.getMainLooper())
@@ -255,7 +257,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     previousLatLng = sydney
                     latLngArray.add(previousLatLng)
                     marker = mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 25.0f))
+//                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 25.0f))
                 }
             }
         }, Looper.getMainLooper())
@@ -281,6 +283,15 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     Firebase.databaseUsers!!.child(userId).child("lastLng").setValue(currentLatLng.longitude)
                     marker.position = currentLatLng
                     distance(previousLatLng, currentLatLng)
+
+                    ActiveUsersData.activeUsersData.forEach {
+                        if(tmpMarker == null) {
+                            tmpMarker = mMap.addMarker(MarkerOptions().position(LatLng(it.lastLat, it.lastLng)).title(it.username).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)))
+                        }
+                        else {
+                            tmpMarker!!.position = LatLng(it.lastLat, it.lastLng)
+                        }
+                    }
                 }
             }
         }, Looper.getMainLooper())
@@ -302,7 +313,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         lineoption.color(Color.BLUE)
         lineoption.geodesic(true)
         mMap.addPolyline(lineoption)
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(end, 25.0f))
+//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(end, 25.0f))
         distance += distance_tmp
         distanceKm = distance/1000
         speed = (distance_tmp * 3.6).toFloat()
