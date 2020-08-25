@@ -75,6 +75,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private var geoQuery: GeoQuery? = null
     private lateinit var geoFire: GeoFire
 
+    private val activeUsersMarkers: MutableMap<String, Marker> = HashMap()
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -95,7 +97,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
         ActiveUsersData.getActiveUsersData(object: ActiveUsersDataCallback {
             override fun onActiveUsersDataCallback(activeUsersData: ArrayList<ActiveUser>) {
-                println(activeUsersData)
+                addActiveUsersPins()
             }
         })
 
@@ -250,10 +252,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
         mMap.addCircle(CircleOptions().center(LatLng(45.3310694, 14.4303084)).radius(500.0).strokeColor(Color.RED).fillColor(0x220000FF).strokeWidth(7.0f))
 
-//        mMap.addMarker(MarkerOptions().position(location1).title("Marker in Sydney"))
-//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location1, 15.0f))
-//        mMap.addMarker(MarkerOptions().position(location2).title("Marker in Sydney"))
-
 //        val URL = getDirectionURL(location1, location2)
 //        GetDirection(URL).execute()
 
@@ -271,7 +269,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     previousLatLng = sydney
                     latLngArray.add(previousLatLng)
                     marker = mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-//                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 25.0f))
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 25.0f))
                 }
             }
         }, Looper.getMainLooper())
@@ -282,6 +280,17 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         locationRequest.interval = 10000
         locationRequest.fastestInterval = 1000
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+
+//        ActiveUsersData.activeUsersData.forEach {
+//            activeUsersMarkers[it.id]?.position = LatLng(it.lastLat, it.lastLng)
+//        }
+        ActiveUsersData.getActiveUsersData(object: ActiveUsersDataCallback {
+            override fun onActiveUsersDataCallback(activeUsersData: ArrayList<ActiveUser>) {
+                activeUsersData.forEach {
+                    activeUsersMarkers[it.id]?.position = LatLng(it.lastLat, it.lastLng)
+                }
+            }
+        })
 
         LocationServices.getFusedLocationProviderClient(requireContext()).requestLocationUpdates(locationRequest, object:
             LocationCallback() {
@@ -295,13 +304,20 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     currentLatLng = LatLng(latitude, longitude)
                     Firebase.databaseUsers!!.child(userId).child("lastLat").setValue(currentLatLng.latitude)
                     Firebase.databaseUsers!!.child(userId).child("lastLng").setValue(currentLatLng.longitude)
-                    geoFire.setLocation("You", GeoLocation(currentLatLng.latitude, currentLatLng.longitude))
+                    geoFire.setLocation(userId, GeoLocation(currentLatLng.latitude, currentLatLng.longitude))
+                    // add all active users to geoFire
                     marker.position = currentLatLng
                     addCircleArea()
                     distance(previousLatLng, currentLatLng)
                 }
             }
         }, Looper.getMainLooper())
+    }
+
+    private fun addActiveUsersPins() {
+        ActiveUsersData.activeUsersData.forEach {
+            activeUsersMarkers[it.id] = mMap.addMarker(MarkerOptions().position(LatLng(it.lastLat, it.lastLng)).title(it.username))
+        }
     }
 
     private fun addCircleArea() {
@@ -320,16 +336,19 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             override fun onKeyEntered(key: String?, location: GeoLocation?) {
 //                sendNotification("EDMTDev", String.format("%s entered the dangerous area", key))
                 println("entered")
+                println(key)
             }
 
             override fun onKeyMoved(key: String?, location: GeoLocation?) {
 //                sendNotification("EDMTDev", String.format("%s move within the dangerous area", key))
                 println("moving")
+                println(key)
             }
 
             override fun onKeyExited(key: String?) {
 //                sendNotification("EDMTDev", String.format("%s leave the dangerous area", key))
                 println("exited")
+                println(key)
             }
 
             override fun onGeoQueryError(error: DatabaseError?) {
