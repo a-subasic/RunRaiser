@@ -14,6 +14,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import com.example.runraiser.ActiveUsersDataCallback
@@ -33,8 +34,10 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.fragment_home.*
@@ -315,18 +318,28 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 //        }
 
         ActiveUsersData.getActiveUsersData(object: ActiveUsersDataCallback {
+            @RequiresApi(Build.VERSION_CODES.N)
             override fun onActiveUsersDataCallback(activeUsersData: ArrayList<ActiveUser>) {
                 activeUsersData.forEach {
-
                     if(!activeUsersMarkers.containsKey(it.id)) {
                         activeUsersMarkers[it.id] = mMap.addMarker(MarkerOptions().position(LatLng(it.lastLat, it.lastLng)).title(it.username))
                         activeUsersMarkers[it.id]?.isVisible = false
                     }
-                    else {
-                        activeUsersMarkers[it.id]?.position = LatLng(it.lastLat, it.lastLng)
-                        geoFire.setLocation(it.id, GeoLocation(it.lastLat, it.lastLng))
-                    }
-//                    activeUsersMarkers[it.id]?.isVisible = false
+                    activeUsersMarkers[it.id]?.position = LatLng(it.lastLat, it.lastLng)
+                    geoFire.setLocation(it.id, GeoLocation(it.lastLat, it.lastLng))
+                }
+                activeUsersMarkers.forEach { (s, _) ->
+                    Firebase.databaseUsers?.child(s)?.child("isInTraining")
+                        ?.addListenerForSingleValueEvent(object: ValueEventListener {
+                            override fun onCancelled(error: DatabaseError) {}
+                            override fun onDataChange(snapshot: DataSnapshot) {
+                                if(snapshot.value == false) {
+                                    activeUsersMarkers[s]?.remove()
+                                    activeUsersMarkers.remove(s)
+                                    geoFire.removeLocation(s)
+                                }
+                            }
+                        })
                 }
             }
         })
