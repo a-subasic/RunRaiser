@@ -305,9 +305,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun addCircleArea() {
-        if(geoQuery != null) {
-            geoQuery!!.removeAllListeners()
-        }
+//        if(geoQuery != null) {
+//            geoQuery!!.removeAllListeners()
+//        }
 
         if(circle == null) {
             circle = mMap.addCircle(CircleOptions().center(currentLatLng).radius(500.0).strokeColor(Color.BLUE).fillColor(0x220000FF).strokeWidth(5.0f))
@@ -318,15 +318,18 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         geoQuery!!.addGeoQueryEventListener(object : GeoQueryEventListener {
             override fun onGeoQueryReady() {}
             override fun onKeyEntered(key: String?, location: GeoLocation?) {
-                sendNotification("EDMTDev", String.format("%s entered the dangerous area", key))
+//                sendNotification("EDMTDev", String.format("%s entered the dangerous area", key))
+                println("entered")
             }
 
             override fun onKeyMoved(key: String?, location: GeoLocation?) {
-                sendNotification("EDMTDev", String.format("%s move within the dangerous area", key))
+//                sendNotification("EDMTDev", String.format("%s move within the dangerous area", key))
+                println("moving")
             }
 
             override fun onKeyExited(key: String?) {
-                sendNotification("EDMTDev", String.format("%s leave the dangerous area", key))
+//                sendNotification("EDMTDev", String.format("%s leave the dangerous area", key))
+                println("exited")
             }
 
             override fun onGeoQueryError(error: DatabaseError?) {
