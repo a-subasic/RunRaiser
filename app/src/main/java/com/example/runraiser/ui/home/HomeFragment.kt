@@ -248,6 +248,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         locationRequest.fastestInterval = 3000
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
 
+        mMap.addCircle(CircleOptions().center(LatLng(45.3310694, 14.4303084)).radius(500.0).strokeColor(Color.RED).fillColor(0x220000FF).strokeWidth(7.0f))
+
 //        mMap.addMarker(MarkerOptions().position(location1).title("Marker in Sydney"))
 //        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location1, 15.0f))
 //        mMap.addMarker(MarkerOptions().position(location2).title("Marker in Sydney"))
@@ -293,6 +295,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     currentLatLng = LatLng(latitude, longitude)
                     Firebase.databaseUsers!!.child(userId).child("lastLat").setValue(currentLatLng.latitude)
                     Firebase.databaseUsers!!.child(userId).child("lastLng").setValue(currentLatLng.longitude)
+                    geoFire.setLocation("You", GeoLocation(currentLatLng.latitude, currentLatLng.longitude))
                     marker.position = currentLatLng
                     addCircleArea()
                     distance(previousLatLng, currentLatLng)
@@ -352,7 +355,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         lineoption.color(Color.BLUE)
         lineoption.geodesic(true)
         mMap.addPolyline(lineoption)
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(end, 25.0f))
+//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(end, 25.0f))
         distance += distance_tmp
         distanceKm = distance/1000
         speed = (distance_tmp * 3.6).toFloat()
