@@ -75,7 +75,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private var geoQuery: GeoQuery? = null
     private lateinit var geoFire: GeoFire
 
-    private val activeUsersMarkers: MutableMap<String, Marker> = HashMap()
+    private var activeUsersMarkers: MutableMap<String, Marker> = HashMap()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -281,17 +281,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         locationRequest.fastestInterval = 1000
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
 
-//        ActiveUsersData.activeUsersData.forEach {
-//            activeUsersMarkers[it.id]?.position = LatLng(it.lastLat, it.lastLng)
-//        }
-        ActiveUsersData.getActiveUsersData(object: ActiveUsersDataCallback {
-            override fun onActiveUsersDataCallback(activeUsersData: ArrayList<ActiveUser>) {
-                activeUsersData.forEach {
-                    activeUsersMarkers[it.id]?.position = LatLng(it.lastLat, it.lastLng)
-                }
-            }
-        })
-
         LocationServices.getFusedLocationProviderClient(requireContext()).requestLocationUpdates(locationRequest, object:
             LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
@@ -304,8 +293,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     currentLatLng = LatLng(latitude, longitude)
                     Firebase.databaseUsers!!.child(userId).child("lastLat").setValue(currentLatLng.latitude)
                     Firebase.databaseUsers!!.child(userId).child("lastLng").setValue(currentLatLng.longitude)
-                    geoFire.setLocation(userId, GeoLocation(currentLatLng.latitude, currentLatLng.longitude))
-                    // add all active users to geoFire
+//                    geoFire.setLocation(userId, GeoLocation(currentLatLng.latitude, currentLatLng.longitude))
                     marker.position = currentLatLng
                     addCircleArea()
                     distance(previousLatLng, currentLatLng)
@@ -317,6 +305,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private fun addActiveUsersPins() {
         ActiveUsersData.activeUsersData.forEach {
             activeUsersMarkers[it.id] = mMap.addMarker(MarkerOptions().position(LatLng(it.lastLat, it.lastLng)).title(it.username))
+            activeUsersMarkers[it.id]?.isVisible = false
         }
     }
 
@@ -325,28 +314,48 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 //            geoQuery!!.removeAllListeners()
 //        }
 
-        if(circle == null) {
-            circle = mMap.addCircle(CircleOptions().center(currentLatLng).radius(500.0).strokeColor(Color.BLUE).fillColor(0x220000FF).strokeWidth(5.0f))
-        }
+        ActiveUsersData.getActiveUsersData(object: ActiveUsersDataCallback {
+            override fun onActiveUsersDataCallback(activeUsersData: ArrayList<ActiveUser>) {
+                activeUsersData.forEach {
 
-        circle?.center = currentLatLng
+                    if(!activeUsersMarkers.containsKey(it.id)) {
+                        activeUsersMarkers[it.id] = mMap.addMarker(MarkerOptions().position(LatLng(it.lastLat, it.lastLng)).title(it.username))
+                    }
+                    else {
+                        activeUsersMarkers[it.id]?.position = LatLng(it.lastLat, it.lastLng)
+                        geoFire.setLocation(it.id, GeoLocation(it.lastLat, it.lastLng))
+                    }
+                    activeUsersMarkers[it.id]?.isVisible = false
+                }
+            }
+        })
+
+
+//        if(circle == null) {
+//            circle = mMap.addCircle(CircleOptions().center(currentLatLng).radius(500.0).strokeColor(Color.BLUE).fillColor(0x220000FF).strokeWidth(5.0f))
+//        }
+//
+//        circle?.center = currentLatLng
         geoQuery = geoFire.queryAtLocation(GeoLocation(45.3310694, 14.4303084), 0.5)
         geoQuery!!.addGeoQueryEventListener(object : GeoQueryEventListener {
             override fun onGeoQueryReady() {}
             override fun onKeyEntered(key: String?, location: GeoLocation?) {
 //                sendNotification("EDMTDev", String.format("%s entered the dangerous area", key))
+                activeUsersMarkers[key]?.isVisible = true
                 println("entered")
                 println(key)
             }
 
             override fun onKeyMoved(key: String?, location: GeoLocation?) {
 //                sendNotification("EDMTDev", String.format("%s move within the dangerous area", key))
+                activeUsersMarkers[key]?.isVisible = true
                 println("moving")
                 println(key)
             }
 
             override fun onKeyExited(key: String?) {
 //                sendNotification("EDMTDev", String.format("%s leave the dangerous area", key))
+                activeUsersMarkers[key]?.isVisible = false
                 println("exited")
                 println(key)
             }
