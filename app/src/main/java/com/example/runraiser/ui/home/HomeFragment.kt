@@ -350,7 +350,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         }
 
         circle?.center = currentLatLng
-        geoQuery = geoFire.queryAtLocation(GeoLocation(currentLatLng.latitude, currentLatLng.longitude), 0.5)
+        if(geoQuery == null) geoQuery = geoFire.queryAtLocation(GeoLocation(currentLatLng.latitude, currentLatLng.longitude), 0.5)
+        else geoQuery!!.center = GeoLocation(currentLatLng.latitude, currentLatLng.longitude)
         geoQuery!!.addGeoQueryEventListener(object : GeoQueryEventListener {
             override fun onGeoQueryReady() {}
             override fun onKeyEntered(key: String?, location: GeoLocation?) {
