@@ -250,7 +250,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         locationRequest.fastestInterval = 3000
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
 
-        mMap.addCircle(CircleOptions().center(LatLng(45.3310694, 14.4303084)).radius(500.0).strokeColor(Color.RED).fillColor(0x220000FF).strokeWidth(7.0f))
+//        mMap.addCircle(CircleOptions().center(LatLng(45.3310694, 14.4303084)).radius(500.0).strokeColor(Color.RED).fillColor(0x220000FF).strokeWidth(7.0f))
 
 //        val URL = getDirectionURL(location1, location2)
 //        GetDirection(URL).execute()
@@ -320,23 +320,24 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
                     if(!activeUsersMarkers.containsKey(it.id)) {
                         activeUsersMarkers[it.id] = mMap.addMarker(MarkerOptions().position(LatLng(it.lastLat, it.lastLng)).title(it.username))
+                        activeUsersMarkers[it.id]?.isVisible = false
                     }
                     else {
                         activeUsersMarkers[it.id]?.position = LatLng(it.lastLat, it.lastLng)
                         geoFire.setLocation(it.id, GeoLocation(it.lastLat, it.lastLng))
                     }
-                    activeUsersMarkers[it.id]?.isVisible = false
+//                    activeUsersMarkers[it.id]?.isVisible = false
                 }
             }
         })
 
 
-//        if(circle == null) {
-//            circle = mMap.addCircle(CircleOptions().center(currentLatLng).radius(500.0).strokeColor(Color.BLUE).fillColor(0x220000FF).strokeWidth(5.0f))
-//        }
-//
-//        circle?.center = currentLatLng
-        geoQuery = geoFire.queryAtLocation(GeoLocation(45.3310694, 14.4303084), 0.5)
+        if(circle == null) {
+            circle = mMap.addCircle(CircleOptions().center(currentLatLng).radius(500.0).strokeColor(Color.BLUE).fillColor(0x220000FF).strokeWidth(5.0f))
+        }
+
+        circle?.center = currentLatLng
+        geoQuery = geoFire.queryAtLocation(GeoLocation(currentLatLng.latitude, currentLatLng.longitude), 0.5)
         geoQuery!!.addGeoQueryEventListener(object : GeoQueryEventListener {
             override fun onGeoQueryReady() {}
             override fun onKeyEntered(key: String?, location: GeoLocation?) {
@@ -348,7 +349,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
             override fun onKeyMoved(key: String?, location: GeoLocation?) {
 //                sendNotification("EDMTDev", String.format("%s move within the dangerous area", key))
-                activeUsersMarkers[key]?.isVisible = true
+//                activeUsersMarkers[key]?.isVisible = true
                 println("moving")
                 println(key)
             }
