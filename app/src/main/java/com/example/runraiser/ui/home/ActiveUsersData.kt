@@ -23,9 +23,9 @@ class ActiveUsersData {
                 override fun onDataChange(p0: DataSnapshot) {
                     val children = p0.children
                     children.forEach{
-                        val isInTraining = it.child("isInTraining").value
+                        val inTraining = it.child("inTraining").value
                         val userId = it.child("id").value.toString()
-                        if(isInTraining as Boolean && userId != Firebase.auth?.uid) {
+                        if(inTraining as Boolean && userId != Firebase.auth?.uid) {
                             activeUsersData[userId] =
                                 ActiveUser (
                                     it.child("id").value.toString(),

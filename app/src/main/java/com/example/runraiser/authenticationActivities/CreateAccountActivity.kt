@@ -283,4 +283,4 @@ class CreateAccountActivity : AppCompatActivity() {
 }
 
 class User(val id: String, val email: String, val fullName: String, val username: String, val profilePhotoUrl: String,
-           val isInTraining: Boolean, val lastLat: Double, val lastLng: Double)
+           val inTraining: Boolean, val lastLat: Double, val lastLng: Double)

@@ -44,9 +44,11 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.fragment_home.*
+import kotlinx.android.synthetic.main.send_message_dialog.view.*
 import kotlinx.android.synthetic.main.trainig_setup_dialog.view.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -88,6 +90,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private var activeUsersMarkers: MutableMap<String, Marker> = HashMap()
     private var entered: HashMap<String, Int> = HashMap()
 
+    private var mFirestore: FirebaseFirestore? = null
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -102,6 +106,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         super.onViewCreated(view, savedInstanceState)
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        mFirestore = FirebaseFirestore.getInstance()
 
         //setting up GeoFire
         geoFire = GeoFire(FirebaseDatabase.getInstance().getReference("MyLocation/${userId}"))
@@ -122,19 +128,21 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 .setTitle("Training Setup")
 
             val  mAlertDialog = mBuilder.show()
-            //login button click of custom layout
+
             mDialogView.ok_btn.setOnClickListener {
                 //get text from EditTexts of custom layout
                 trainingId = UUID.randomUUID().toString().replace("-", "").toUpperCase(Locale.ROOT)
-                val kilometers = mDialogView.et_kilometers.text.toString().toInt()
-                val valueKn = mDialogView.et_value.text.toString().toInt()
+                val kilometers = mDialogView.et_kilometers.text.toString()
+                val valueKn = mDialogView.et_value.text.toString()
 
-
-                if (kilometers > 80) {
+                if(mDialogView.et_kilometers.text.toString().isEmpty() || mDialogView.et_value.text.toString().isEmpty()) {
+                    Toast.makeText(activity, "Please fill out all fields.", Toast.LENGTH_SHORT).show()
+                }
+                else if (kilometers.toInt() > 80) {
                     mDialogView.et_kilometers.error = "Maximum is 80km"
                     mDialogView.et_kilometers.requestFocus()
                 }
-                else if (valueKn > 100) {
+                else if (valueKn.toInt() > 100) {
                     mDialogView.et_value.error = "Maximum is 100kn"
                     mDialogView.et_value.requestFocus()
                 }
@@ -151,13 +159,13 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                         formatter.format(date)
                     }
                     val training =
-                        Firebase.auth?.uid?.let { it1 -> Training(trainingId, it1, kilometers, valueKn, startDate) }
+                        Firebase.auth?.uid?.let { it1 -> Training(trainingId, it1, kilometers.toInt(), valueKn.toInt(), startDate) }
 
                     Firebase.databaseTrainings
                         ?.child(trainingId)
                         ?.setValue(training)
 
-                    Firebase.databaseUsers!!.child(userId).child("isInTraining").setValue(true)
+                    Firebase.databaseUsers!!.child(userId).child("inTraining").setValue(true)
 
                     start_btn.visibility = View.GONE
                     training_content.visibility = View.VISIBLE
@@ -181,7 +189,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 stop_btn.setOnClickListener {
                     val raisedVal = (kotlin.math.floor(distanceKm) * valueKn.toDouble()).toInt()
                     val raisedAlert = AlertDialog.Builder(context)
-                    Firebase.databaseUsers!!.child(userId).child("isInTraining").setValue(false)
+                    Firebase.databaseUsers!!.child(userId).child("inTraining").setValue(false)
 
                     if(raisedVal > 0) {
                         raisedAlert.setTitle("Congratulations!")
@@ -261,6 +269,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         locationRequest.fastestInterval = 3000
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
 
+        openMessageWindow()
+
 //        mMap.addCircle(CircleOptions().center(LatLng(45.3310694, 14.4303084)).radius(500.0).strokeColor(Color.RED).fillColor(0x220000FF).strokeWidth(7.0f))
 
 //        val URL = getDirectionURL(location1, location2)
@@ -280,6 +290,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     previousLatLng = sydney
                     latLngArray.add(previousLatLng)
                     marker = mMap.addMarker(MarkerOptions().position(sydney).title("Me"))
+                    marker.tag = userId
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 25.0f))
                 }
             }
@@ -317,6 +328,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private fun addActiveUsersPins() {
         ActiveUsersData.activeUsersData.forEach { (s, activeUser) ->
             activeUsersMarkers[s] = mMap.addMarker(MarkerOptions().position(LatLng(activeUser.lastLat, activeUser.lastLng)).title(activeUser.username))
+            activeUsersMarkers[s]?.tag = activeUser.id
             activeUsersMarkers[s]?.isVisible = false
             entered[s] = 0
         }
@@ -333,6 +345,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 activeUsersData.forEach { (s, activeUser) ->
                     if(!activeUsersMarkers.containsKey(s)) {
                         activeUsersMarkers[s] = mMap.addMarker(MarkerOptions().position(LatLng(activeUser.lastLat, activeUser.lastLng)).title(activeUser.username))
+                        activeUsersMarkers[s]?.tag = activeUser.id
                         activeUsersMarkers[s]?.isVisible = false
                         entered[s] = 0
                     }
@@ -340,7 +353,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     geoFire.setLocation(s, GeoLocation(activeUser.lastLat, activeUser.lastLng))
                 }
                 activeUsersMarkers.forEach { (s, _) ->
-                    Firebase.databaseUsers?.child(s)?.child("isInTraining")
+                    Firebase.databaseUsers?.child(s)?.child("inTraining")
                         ?.addListenerForSingleValueEvent(object: ValueEventListener {
                             override fun onCancelled(error: DatabaseError) {}
                             override fun onDataChange(snapshot: DataSnapshot) {
@@ -367,7 +380,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         geoQuery!!.addGeoQueryEventListener(object : GeoQueryEventListener {
             override fun onGeoQueryReady() {}
             override fun onKeyEntered(key: String?, location: GeoLocation?) {
-                if(entered[key] == 0 && key != userId) sendNotification("ENTERED", String.format("%s entered the dangerous area",
+                if(entered[key] == 0 && key != userId && ActiveUsersData.activeUsersData[key]?.username != null) sendNotification("ENTERED", String.format("%s entered the dangerous area",
                     ActiveUsersData.activeUsersData[key]?.username))
                 if (key != null) {
                     entered[key]?.plus(1)?.let { entered.put(key, it) }
@@ -641,6 +654,46 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         Timer("Loading Map", false).schedule(2000) {
             snapShot()
         }
+    }
+
+    private fun openMessageWindow() {
+        mMap.setOnInfoWindowClickListener(object: GoogleMap.OnInfoWindowClickListener {
+            override fun onInfoWindowClick(p0: Marker?) {
+                if(p0?.tag.toString() != userId) {
+                    val mDialogView =
+                        LayoutInflater.from(context).inflate(R.layout.send_message_dialog, null)
+                    val mBuilder = AlertDialog.Builder(context)
+                        .setView(mDialogView)
+                        .setTitle("Message")
+
+                    val mAlertDialog = mBuilder.show()
+                    mDialogView.send_btn.setOnClickListener {
+                        val message = mDialogView.et_message.text.toString()
+                        if (message.isEmpty()) {
+                            mDialogView.et_message.error = "Message cannot be empty!"
+                            mDialogView.et_message.requestFocus()
+                        } else {
+                            mAlertDialog.dismiss()
+                            val notificationMessage: MutableMap<String, Any> = HashMap()
+                            notificationMessage["fromId"] = Firebase.userId
+                            notificationMessage["message"] = message
+
+                            mFirestore!!
+                                .collection("Users/${p0?.tag.toString()}/Notifications")
+                                .add(notificationMessage)
+                                .addOnSuccessListener {
+                                    Log.d(tag, "Notification saved to Firestore")
+                                }
+                        }
+                    }
+                    //cancel button click of custom layout
+                    mDialogView.cancel_msg_btn.setOnClickListener {
+                        //dismiss dialog
+                        mAlertDialog.dismiss()
+                    }
+                }
+            }
+        })
     }
 }
 

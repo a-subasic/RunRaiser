@@ -196,6 +196,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+
     private fun updateUI() {
         editor = sharedPrefs?.edit()
         if(remember_me.isChecked) {
