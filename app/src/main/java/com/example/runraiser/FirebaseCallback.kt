@@ -8,5 +8,5 @@ interface TrainingsDataCallback {
 }
 
 interface ActiveUsersDataCallback {
-    fun onActiveUsersDataCallback(activeUsersData: ArrayList<ActiveUser>)
+    fun onActiveUsersDataCallback(activeUsersData: HashMap<String, ActiveUser>)
 }

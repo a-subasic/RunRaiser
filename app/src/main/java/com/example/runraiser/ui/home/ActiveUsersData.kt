@@ -11,10 +11,10 @@ import com.google.firebase.database.ValueEventListener
 
 class ActiveUsersData {
     companion object {
-        var activeUsersData = ArrayList<ActiveUser>()
+        var activeUsersData = HashMap<String, ActiveUser>()
 
         fun getActiveUsersData(activeUsersDataCallback: ActiveUsersDataCallback) {
-            activeUsersData = ArrayList()
+            activeUsersData = HashMap()
             Firebase.databaseUsers?.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onCancelled(error: DatabaseError) {
                     Log.i("fetchUsersData", "Failed to read value. " + error.message)
@@ -26,7 +26,7 @@ class ActiveUsersData {
                         val isInTraining = it.child("isInTraining").value
                         val userId = it.child("id").value.toString()
                         if(isInTraining as Boolean && userId != Firebase.auth?.uid) {
-                            activeUsersData.add (
+                            activeUsersData[userId] =
                                 ActiveUser (
                                     it.child("id").value.toString(),
                                     it.child("lastLat").value as Double,
@@ -35,7 +35,6 @@ class ActiveUsersData {
                                     it.child("profilePhotoUrl").value.toString(),
                                     it.child("tokenId").value.toString()
                                 )
-                            )
                         }
                     }
                     activeUsersDataCallback.onActiveUsersDataCallback(activeUsersData)

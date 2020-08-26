@@ -1,9 +1,13 @@
 package com.example.runraiser.ui.home
 
 import android.app.AlertDialog
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.ContentResolver
 import android.content.ContentValues
+import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.location.Location
 import android.net.Uri
@@ -15,6 +19,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import com.example.runraiser.ActiveUsersDataCallback
@@ -53,6 +59,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import kotlin.concurrent.schedule
 
 
@@ -79,6 +86,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private lateinit var geoFire: GeoFire
 
     private var activeUsersMarkers: MutableMap<String, Marker> = HashMap()
+    private var entered: HashMap<String, Int> = HashMap()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -96,10 +104,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
 
         //setting up GeoFire
-        geoFire = GeoFire(FirebaseDatabase.getInstance().getReference("MyLocation"))
+        geoFire = GeoFire(FirebaseDatabase.getInstance().getReference("MyLocation/${userId}"))
 
         ActiveUsersData.getActiveUsersData(object: ActiveUsersDataCallback {
-            override fun onActiveUsersDataCallback(activeUsersData: ArrayList<ActiveUser>) {
+            @RequiresApi(Build.VERSION_CODES.N)
+            override fun onActiveUsersDataCallback(activeUsersData: HashMap<String, ActiveUser>) {
                 addActiveUsersPins()
             }
         })
@@ -120,54 +129,53 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 val kilometers = mDialogView.et_kilometers.text.toString().toInt()
                 val valueKn = mDialogView.et_value.text.toString().toInt()
 
-                when {
-                    kilometers > 80 -> {
-                        mDialogView.et_kilometers.error = "Maximum is 80km"
-                        mDialogView.et_kilometers.requestFocus()
+
+                if (kilometers > 80) {
+                    mDialogView.et_kilometers.error = "Maximum is 80km"
+                    mDialogView.et_kilometers.requestFocus()
+                }
+                else if (valueKn > 100) {
+                    mDialogView.et_value.error = "Maximum is 100kn"
+                    mDialogView.et_value.requestFocus()
+                }
+                else {
+                    mAlertDialog.dismiss()
+                    var startDate: String?
+                    startDate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        val current = LocalDateTime.now()
+                        val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
+                        current.format(formatter)
+                    } else {
+                        val date = Date()
+                        val formatter = SimpleDateFormat("dd.MM.yyyy HH:mm")
+                        formatter.format(date)
                     }
-                    valueKn > 100 -> {
-                        mDialogView.et_value.error = "Maximum is 100kn"
-                        mDialogView.et_value.requestFocus()
-                    }
-                    else -> {
-                        mAlertDialog.dismiss()
-                        var startDate: String?
-                        startDate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            val current = LocalDateTime.now()
-                            val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
-                            current.format(formatter)
-                        } else {
-                            val date = Date()
-                            val formatter = SimpleDateFormat("dd.MM.yyyy HH:mm")
-                            formatter.format(date)
+                    val training =
+                        Firebase.auth?.uid?.let { it1 -> Training(trainingId, it1, kilometers, valueKn, startDate) }
+
+                    Firebase.databaseTrainings
+                        ?.child(trainingId)
+                        ?.setValue(training)
+
+                    Firebase.databaseUsers!!.child(userId).child("isInTraining").setValue(true)
+
+                    start_btn.visibility = View.GONE
+                    training_content.visibility = View.VISIBLE
+                    stop_btn.visibility = View.VISIBLE
+                    reset_btn.visibility = View.GONE
+
+                    tv_distance.text = distance.toString()
+                    tv_speed.text = speed.toString()
+                    chronometer.base = SystemClock.elapsedRealtime()+stopTime
+                    chronometer.start()
+                    timer = Timer()
+                    val task = object: TimerTask() {
+                        override fun run() {
+                            println("timer passed ${++timesRan} time(s)")
+                            calculateLatLng()
                         }
-                        val training =
-                            Firebase.auth?.uid?.let { it1 -> Training(trainingId, it1, kilometers, valueKn, startDate) }
-
-                        Firebase.databaseTrainings
-                            ?.child(trainingId)
-                            ?.setValue(training)
-
-                        Firebase.databaseUsers!!.child(userId).child("isInTraining").setValue(true)
-
-                        start_btn.visibility = View.GONE
-                        training_content.visibility = View.VISIBLE
-                        stop_btn.visibility = View.VISIBLE
-                        reset_btn.visibility = View.GONE
-
-                        tv_distance.text = distance.toString()
-                        tv_speed.text = speed.toString()
-                        chronometer.base = SystemClock.elapsedRealtime()+stopTime
-                        chronometer.start()
-                        timer = Timer()
-                        val task = object: TimerTask() {
-                            override fun run() {
-                                println("timer passed ${++timesRan} time(s)")
-                                calculateLatLng()
-                            }
-                        }
-                        timer!!.schedule(task, 0, 1000)
                     }
+                    timer!!.schedule(task, 0, 1000)
                 }
 
                 stop_btn.setOnClickListener {
@@ -271,7 +279,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     val sydney = LatLng(latitude, longitude)
                     previousLatLng = sydney
                     latLngArray.add(previousLatLng)
-                    marker = mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
+                    marker = mMap.addMarker(MarkerOptions().position(sydney).title("Me"))
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 25.0f))
                 }
             }
@@ -305,10 +313,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         }, Looper.getMainLooper())
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     private fun addActiveUsersPins() {
-        ActiveUsersData.activeUsersData.forEach {
-            activeUsersMarkers[it.id] = mMap.addMarker(MarkerOptions().position(LatLng(it.lastLat, it.lastLng)).title(it.username))
-            activeUsersMarkers[it.id]?.isVisible = false
+        ActiveUsersData.activeUsersData.forEach { (s, activeUser) ->
+            activeUsersMarkers[s] = mMap.addMarker(MarkerOptions().position(LatLng(activeUser.lastLat, activeUser.lastLng)).title(activeUser.username))
+            activeUsersMarkers[s]?.isVisible = false
+            entered[s] = 0
         }
     }
 
@@ -319,14 +329,15 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
         ActiveUsersData.getActiveUsersData(object: ActiveUsersDataCallback {
             @RequiresApi(Build.VERSION_CODES.N)
-            override fun onActiveUsersDataCallback(activeUsersData: ArrayList<ActiveUser>) {
-                activeUsersData.forEach {
-                    if(!activeUsersMarkers.containsKey(it.id)) {
-                        activeUsersMarkers[it.id] = mMap.addMarker(MarkerOptions().position(LatLng(it.lastLat, it.lastLng)).title(it.username))
-                        activeUsersMarkers[it.id]?.isVisible = false
+            override fun onActiveUsersDataCallback(activeUsersData: HashMap<String, ActiveUser>) {
+                activeUsersData.forEach { (s, activeUser) ->
+                    if(!activeUsersMarkers.containsKey(s)) {
+                        activeUsersMarkers[s] = mMap.addMarker(MarkerOptions().position(LatLng(activeUser.lastLat, activeUser.lastLng)).title(activeUser.username))
+                        activeUsersMarkers[s]?.isVisible = false
+                        entered[s] = 0
                     }
-                    activeUsersMarkers[it.id]?.position = LatLng(it.lastLat, it.lastLng)
-                    geoFire.setLocation(it.id, GeoLocation(it.lastLat, it.lastLng))
+                    activeUsersMarkers[s]?.position = LatLng(activeUser.lastLat, activeUser.lastLng)
+                    geoFire.setLocation(s, GeoLocation(activeUser.lastLat, activeUser.lastLng))
                 }
                 activeUsersMarkers.forEach { (s, _) ->
                     Firebase.databaseUsers?.child(s)?.child("isInTraining")
@@ -337,6 +348,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                                     activeUsersMarkers[s]?.remove()
                                     activeUsersMarkers.remove(s)
                                     geoFire.removeLocation(s)
+                                    entered.remove(s)
                                 }
                             }
                         })
@@ -355,24 +367,26 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         geoQuery!!.addGeoQueryEventListener(object : GeoQueryEventListener {
             override fun onGeoQueryReady() {}
             override fun onKeyEntered(key: String?, location: GeoLocation?) {
-//                sendNotification("EDMTDev", String.format("%s entered the dangerous area", key))
+                if(entered[key] == 0 && key != userId) sendNotification("ENTERED", String.format("%s entered the dangerous area",
+                    ActiveUsersData.activeUsersData[key]?.username))
+                if (key != null) {
+                    entered[key]?.plus(1)?.let { entered.put(key, it) }
+                }
                 activeUsersMarkers[key]?.isVisible = true
-                println("entered")
-                println(key)
             }
 
             override fun onKeyMoved(key: String?, location: GeoLocation?) {
-//                sendNotification("EDMTDev", String.format("%s move within the dangerous area", key))
-//                activeUsersMarkers[key]?.isVisible = true
                 println("moving")
                 println(key)
             }
 
             override fun onKeyExited(key: String?) {
-//                sendNotification("EDMTDev", String.format("%s leave the dangerous area", key))
-                activeUsersMarkers[key]?.isVisible = false
                 println("exited")
                 println(key)
+                if (key != null) {
+                    entered.put(key, 0)
+                }
+                activeUsersMarkers[key]?.isVisible = false
             }
 
             override fun onGeoQueryError(error: DatabaseError?) {
@@ -382,7 +396,24 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun sendNotification(title: String, content: String) {
-        Toast.makeText(context, ""+content, Toast.LENGTH_SHORT).show()
+        val NOTIFICATION_CHANNEL_ID = "run_raiser"
+        val notificationManager = activity?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationChannel = NotificationChannel(NOTIFICATION_CHANNEL_ID, "myNotification", NotificationManager.IMPORTANCE_DEFAULT)
+            notificationChannel.description = "Channel desc"
+
+            notificationManager.createNotificationChannel(notificationChannel)
+            val builder = context?.let { NotificationCompat.Builder(it, NOTIFICATION_CHANNEL_ID) }
+            builder?.setContentTitle(title)
+                ?.setContentText(content)
+                ?.setAutoCancel(false)
+                ?.setSmallIcon(R.mipmap.ic_launcher)
+                ?.setLargeIcon(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))
+
+            val notification = builder?.build()
+            notificationManager.notify(Random().nextInt(), notification)
+        }
     }
 
     private fun distance(start: LatLng, end: LatLng) {
