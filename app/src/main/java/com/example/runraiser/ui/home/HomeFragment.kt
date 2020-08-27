@@ -6,9 +6,7 @@ import android.app.NotificationManager
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Color
+import android.graphics.*
 import android.location.Location
 import android.net.Uri
 import android.os.*
@@ -20,11 +18,12 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
+import com.bumptech.glide.request.target.CustomTarget
 import com.example.runraiser.ActiveUsersDataCallback
 import com.example.runraiser.Firebase
+import com.example.runraiser.GlideApp
 import com.example.runraiser.R
 import com.firebase.geofire.GeoFire
 import com.firebase.geofire.GeoLocation
@@ -33,13 +32,13 @@ import com.firebase.geofire.GeoQueryEventListener
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
-import com.google.android.gms.maps.model.LatLngBounds.Builder
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.android.gms.maps.model.LatLngBounds.Builder
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -80,7 +79,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     private var latLngArray: ArrayList<LatLng> = ArrayList()
     private var speedArray: ArrayList<Float> = ArrayList()
-    private lateinit var marker: Marker
+    lateinit var marker: Marker
     private var circle: Circle? = null
     val userId = Firebase.auth!!.currentUser!!.uid
 
@@ -91,6 +90,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private var entered: HashMap<String, Int> = HashMap()
 
     private var mFirestore: FirebaseFirestore? = null
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -276,6 +276,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 //        val URL = getDirectionURL(location1, location2)
 //        GetDirection(URL).execute()
 
+
         LocationServices.getFusedLocationProviderClient(requireContext()).requestLocationUpdates(locationRequest, object:
             LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
@@ -289,7 +290,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     val sydney = LatLng(latitude, longitude)
                     previousLatLng = sydney
                     latLngArray.add(previousLatLng)
-                    marker = mMap.addMarker(MarkerOptions().position(sydney).title("Me"))
+                    marker = mMap.addMarker(MarkerOptions().position(sydney).title("Me")
+                        .icon(BitmapDescriptorFactory.fromBitmap(ActiveUsersData.usersBitmapMarker[userId])).anchor(0.5f, 0.5f))
                     marker.tag = userId
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 25.0f))
                 }
@@ -327,7 +329,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     @RequiresApi(Build.VERSION_CODES.N)
     private fun addActiveUsersPins() {
         ActiveUsersData.activeUsersData.forEach { (s, activeUser) ->
-            activeUsersMarkers[s] = mMap.addMarker(MarkerOptions().position(LatLng(activeUser.lastLat, activeUser.lastLng)).title(activeUser.username))
+            activeUsersMarkers[s] = mMap.addMarker(MarkerOptions().position(LatLng(activeUser.lastLat, activeUser.lastLng)).title(activeUser.username)
+                .icon(BitmapDescriptorFactory.fromBitmap(ActiveUsersData.usersBitmapMarker[s])))
             activeUsersMarkers[s]?.tag = activeUser.id
             activeUsersMarkers[s]?.isVisible = false
             entered[s] = 0
@@ -344,7 +347,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             override fun onActiveUsersDataCallback(activeUsersData: HashMap<String, ActiveUser>) {
                 activeUsersData.forEach { (s, activeUser) ->
                     if(!activeUsersMarkers.containsKey(s)) {
-                        activeUsersMarkers[s] = mMap.addMarker(MarkerOptions().position(LatLng(activeUser.lastLat, activeUser.lastLng)).title(activeUser.username))
+                        activeUsersMarkers[s] = mMap.addMarker(MarkerOptions().position(LatLng(activeUser.lastLat, activeUser.lastLng)).title(activeUser.username)
+                            .icon(BitmapDescriptorFactory.fromBitmap(ActiveUsersData.usersBitmapMarker[s])))
                         activeUsersMarkers[s]?.tag = activeUser.id
                         activeUsersMarkers[s]?.isVisible = false
                         entered[s] = 0

@@ -1,6 +1,6 @@
 package com.example.runraiser.ui.home
 
-import com.google.android.gms.maps.model.LatLng
+import android.graphics.Bitmap
 
 data class ActiveUser (
     var id: String,

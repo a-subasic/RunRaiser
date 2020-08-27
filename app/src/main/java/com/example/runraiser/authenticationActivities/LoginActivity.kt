@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Typeface
+import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.InputType
@@ -13,10 +14,12 @@ import android.text.TextWatcher
 import android.util.Log
 import android.view.View
 import android.widget.*
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.example.runraiser.Firebase
 import com.example.runraiser.R
 import com.example.runraiser.MainActivity
+import com.example.runraiser.ui.home.ActiveUsersData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
@@ -51,13 +54,17 @@ class LoginActivity : AppCompatActivity() {
     private var sharedPrefs: SharedPreferences? = null
     private var editor: SharedPreferences.Editor? = null
 
+    @RequiresApi(Build.VERSION_CODES.N)
     override fun onCreate(savedInstanceState: Bundle?) {
+        ActiveUsersData.getUsersMarkers(this)
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
         initialise()
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     private fun initialise() {
         etEmail = findViewById<View>(R.id.email) as EditText
         etPassword = findViewById<View>(R.id.password) as EditText
@@ -121,6 +128,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     private fun loginUser() {
         email = etEmail?.text.toString()
         password = etPassword?.text.toString()
@@ -159,29 +167,6 @@ class LoginActivity : AppCompatActivity() {
                                 ?.child("tokenId")
                                 ?.setValue(tokenId)
                         }
-//                        mAuth!!.currentUser?.getIdToken(true)?.addOnSuccessListener { p0 ->
-//                            val tokenId: Any = p0?.token!!
-//
-//                            val currentId = mAuth!!.currentUser?.uid
-//
-//                            val tokenMap: MutableMap<String, Any> = HashMap()
-//                            tokenMap["token_id"] = tokenId
-//
-//
-//                            if (currentId != null) {
-//                                mFirestore
-//                                    ?.collection("Users")
-//                                    ?.document(currentId)
-//                                    ?.set(tokenMap)
-//                                    ?.addOnSuccessListener {
-//                                        Log.d(tag, "TokenId saved to Firestore")
-//                                    }
-//                                Firebase.databaseUsers
-//                                    ?.child(currentId)
-//                                    ?.child("tokenId")
-//                                    ?.setValue(tokenId)
-//                            }
-//                        }
 
                         updateUI()
                     } else {
