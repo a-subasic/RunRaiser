@@ -42,4 +42,5 @@
     <string name="desired_mileage">Desired mileage (km)</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
+    <string name="emoji">&#x1F3C3;&#x1F4AA;&#x1F44B;</string>
 </resources>
