@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/road5"
+    android:scaleType = "centerCrop"
+    tools:context=".authenticationActivities.StartActivity">
+
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:background="#C8980303"
+        android:gravity="center_horizontal"
+        android:paddingTop="130dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/logo"
+            android:layout_width="157dp"
+            android:layout_height="131dp"
+            android:contentDescription="@string/logo_icon"
+            app:srcCompat="@drawable/rr_logo_white" />
+
+        <ImageView
+            android:id="@+id/title"
+            android:layout_width="246dp"
+            android:layout_height="77dp"
+            android:contentDescription="@string/logo_icon"
+            app:srcCompat="@drawable/title" />
+
+        <Button
+            android:id="@+id/btn_sign_up"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="32dp"
+            android:layout_marginTop="70dp"
+            android:background="@drawable/btn_sign_up"
+            android:text="@string/sign_up"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:fontFamily="@font/nunito_extrabold" />
+
+        <Button
+            android:id="@+id/btn_login"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="32dp"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/btn_login"
+            android:text="@string/login"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="18sp"
+            android:fontFamily="@font/nunito_extrabold"  />
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

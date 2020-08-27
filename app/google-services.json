@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "971107883809",
+    "firebase_url": "https://runraiser2020.firebaseio.com",
+    "project_id": "runraiser2020",
+    "storage_bucket": "runraiser2020.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:971107883809:android:91e8d6a8cc384622097c60",
+        "android_client_info": {
+          "package_name": "com.example.runraiser"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "971107883809-d31m3lvtgdtg6udh4l95jlgfg32nnecn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC6kLIXggd_iYoG88atfam2kc040zDc1q0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "971107883809-d31m3lvtgdtg6udh4l95jlgfg32nnecn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

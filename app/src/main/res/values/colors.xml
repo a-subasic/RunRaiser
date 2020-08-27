@@ -1,6 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#6200EE</color>
-    <color name="colorPrimaryDark">#3700B3</color>
-    <color name="colorAccent">#03DAC5</color>
+    <color name="colorPrimary">#A62F2F</color>
+    <color name="colorPrimaryDark">#980303</color>
+    <color name="colorAccent">#D11010</color>
+    <color name="dark_blue">#3023AE</color>
+    <color name="medium_purple">#683EBD</color>
+    <color name="purple">#c86dd7</color>
+    <color name="black">#000000</color>
+    <color name="dark_grey">#C9000000</color>
+    <color name="white">#ffffffff</color>
+    <color name="grey">#373737</color>
+    <color name="grey_opacity">#9C5E5E5E</color>
+    <color name="opacity">#00FFFFFF</color>
+
+    <color name="login_form_details">#ccffffff</color>
+    <color name="login_form_details_light">#1affffff</color>
+    <color name="login_form_details_medium">#66ffffff</color>
+
+    <color name="icActive">#FFFFFFFF</color>
+    <color name="icFocused">#DDFFFFFF</color>
+    <color name="icPressed">#AAFFFFFF</color>
+
+    <color name="textTabLight">#6BFFFFFF</color>
+
+    <color name="radio_red">#DF0101</color>
+    <color name="radio_green">#04B404</color>
+    <color name="radio_blue">#0080FF</color>
+    <color name="radio_yellow">#FFBF00</color>
+    <color name="radio_pink">#FA58D0</color>
+    <color name="radio_purple">#7401DF</color>
+    <color name="radio_gray">#6E6E6E</color>
 </resources>
