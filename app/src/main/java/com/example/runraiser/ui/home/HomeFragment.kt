@@ -11,6 +11,7 @@ import android.location.Location
 import android.net.Uri
 import android.os.*
 import android.provider.MediaStore
+import android.text.InputType
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -668,9 +669,68 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                         LayoutInflater.from(context).inflate(R.layout.send_message_dialog, null)
                     val mBuilder = AlertDialog.Builder(context)
                         .setView(mDialogView)
-                        .setTitle("Message")
+                        .setTitle("Type in a message")
 
                     val mAlertDialog = mBuilder.show()
+                    mDialogView.rb1.setOnClickListener{
+                        mDialogView.rb1.isChecked = !mDialogView.rb1.isChecked
+                        if(!mDialogView.rb1.isChecked) {
+                            mDialogView.et_message.inputType = InputType.TYPE_CLASS_TEXT
+                            mDialogView.et_message.setText("")
+                        }
+                        else {
+                            mDialogView.et_message.setText(mDialogView.rb1.text.toString())
+                            mDialogView.et_message.inputType = InputType.TYPE_NULL
+                        }
+                        mDialogView.rb2.isChecked = false
+                        mDialogView.rb3.isChecked = false
+                        mDialogView.rb4.isChecked = false
+                    }
+
+                    mDialogView.rb2.setOnClickListener{
+                        mDialogView.rb2.isChecked = !mDialogView.rb2.isChecked
+                        if(!mDialogView.rb2.isChecked) {
+                            mDialogView.et_message.inputType = InputType.TYPE_CLASS_TEXT
+                            mDialogView.et_message.setText("")
+                        }
+                        else {
+                            mDialogView.et_message.setText(mDialogView.rb2.text.toString())
+                            mDialogView.et_message.inputType = InputType.TYPE_NULL
+                        }
+                        mDialogView.rb1.isChecked = false
+                        mDialogView.rb3.isChecked = false
+                        mDialogView.rb4.isChecked = false
+                    }
+
+                    mDialogView.rb3.setOnClickListener{
+                        mDialogView.rb3.isChecked = !mDialogView.rb3.isChecked
+                        if(!mDialogView.rb3.isChecked) {
+                            mDialogView.et_message.inputType = InputType.TYPE_CLASS_TEXT
+                        }
+                        else {
+                            mDialogView.et_message.setText(mDialogView.rb3.text.toString())
+                            mDialogView.et_message.inputType = InputType.TYPE_NULL
+                        }
+                        mDialogView.rb2.isChecked = false
+                        mDialogView.rb4.isChecked = false
+                        mDialogView.rb1.isChecked = false
+                    }
+
+
+                    mDialogView.rb4.setOnClickListener{
+                        mDialogView.rb4.isChecked = !mDialogView.rb4.isChecked
+                        if(!mDialogView.rb4.isChecked) {
+                            mDialogView.et_message.inputType = InputType.TYPE_CLASS_TEXT
+                        }
+                        else {
+                            mDialogView.et_message.setText(mDialogView.rb4.text.toString())
+                            mDialogView.et_message.inputType = InputType.TYPE_NULL
+                        }
+                        mDialogView.rb2.isChecked = false
+                        mDialogView.rb3.isChecked = false
+                        mDialogView.rb1.isChecked = false
+                    }
+
                     mDialogView.send_btn.setOnClickListener {
                         val message = mDialogView.et_message.text.toString()
                         if (message.isEmpty()) {

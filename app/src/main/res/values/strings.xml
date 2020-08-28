@@ -42,5 +42,11 @@
     <string name="desired_mileage">Desired mileage (km)</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
+    <string name="message_hy">Hello &#x1F44B;</string>
+    <string name="message_race">Let\'s race! &#x1F3C3;</string>
+    <string name="message_fast">&#x1F680;&#x1F680;&#x1F4AA;&#x1F4AA;</string>
+    <string name="message_left">On your left &#x1F440;</string>
+    <string name="emoji_running">&#x1F3C3;&#x1F3C3;&#x1F3C3;</string>
+    <string name="emoji_strong">Let\'s race! &#x1F4AA;&#x1F44B;</string>
     <string name="emoji">&#x1F3C3;&#x1F4AA;&#x1F44B;</string>
 </resources>
