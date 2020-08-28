@@ -49,4 +49,9 @@
     <string name="emoji_running">&#x1F3C3;&#x1F3C3;&#x1F3C3;</string>
     <string name="emoji_strong">Let\'s race! &#x1F4AA;&#x1F44B;</string>
     <string name="emoji">&#x1F3C3;&#x1F4AA;&#x1F44B;</string>
+    <string name="duration">Duration</string>
+    <string name="distance">Distance</string>
+    <string name="average_speed">Average speed</string>
+    <string name="money_raised">Money raised</string>
+    <string name="goal">Goal</string>
 </resources>

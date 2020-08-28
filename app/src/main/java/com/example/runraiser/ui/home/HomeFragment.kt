@@ -152,11 +152,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     var startDate: String?
                     startDate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         val current = LocalDateTime.now()
-                        val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
+                        val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
                         current.format(formatter)
                     } else {
                         val date = Date()
-                        val formatter = SimpleDateFormat("dd.MM.yyyy HH:mm")
+                        val formatter = SimpleDateFormat("dd.MM.yyyy")
                         formatter.format(date)
                     }
                     val training =
@@ -614,11 +614,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         val endDate: String?
         endDate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val current = LocalDateTime.now()
-            val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
+            val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
             current.format(formatter)
         } else {
             val date = Date()
-            val formatter = SimpleDateFormat("dd.MM.yyyy HH:mm")
+            val formatter = SimpleDateFormat("dd.MM.yyyy")
             formatter.format(date)
         }
 

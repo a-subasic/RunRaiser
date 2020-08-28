@@ -27,11 +27,19 @@ class HistoryData {
                             myTrainingsData.add (
                                 HistoryCard(
                                     trainingId,
-                                    userId
+                                    it.child("startDate").value.toString(),
+                                    userId,
+                                    it.child("distanceKm").value.toString(),
+                                    it.child("kilometers").value.toString(),
+                                    it.child("avgSpeed").value.toString(),
+                                    it.child("moneyRaised").value.toString(),
+                                    it.child("trainingMapScreenshot").value.toString(),
+                                    it.child("time").value.toString()
                                 )
                             )
                         }
                     }
+                    myTrainingsData.sortByDescending { it.startDate }
                     trainingsDataCallback.onTrainingsDataCallback(myTrainingsData)
                 }
             })

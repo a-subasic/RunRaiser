@@ -10,26 +10,153 @@
     app:cardPreventCornerOverlap="false"
     >
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:id="@+id/group_card_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tv_history_card_id"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/nunito"
-            android:text="Ime grupe"
-            android:textColor="@color/dark_grey"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
+        <ImageView
+            android:id="@+id/maps_screenshot"
+            android:layout_width="match_parent"
+            android:layout_height="400dp"
+            android:scaleType="centerCrop"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.498"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            android:contentDescription="image" />
+
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stretchColumns="1">
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:text="@string/duration"
+                    android:padding="10dp"
+                    android:textSize="16dp"
+                    android:textColor="@color/black"
+                    android:fontFamily="@font/nunito_bold"
+                    />
+                <TextView
+                    android:id="@+id/tv_duration"
+                    android:text="00:00"
+                    android:gravity="right"
+                    android:padding="10dp"
+                    android:textSize="16dp"
+                    android:textColor="@color/black"
+                    android:fontFamily="@font/nunito_extrabold"
+                    />
+            </TableRow>
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:text="@string/distance"
+                    android:padding="10dp"
+                    android:textSize="16dp"
+                    android:textColor="@color/black"
+                    android:fontFamily="@font/nunito_bold"
+                    />
+                <TextView
+                    android:id="@+id/tv_distance"
+                    android:text="15.45 km"
+                    android:gravity="right"
+                    android:padding="10dp"
+                    android:textSize="16dp"
+                    android:textColor="@color/black"
+                    android:fontFamily="@font/nunito_extrabold"
+                    />
+            </TableRow>
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:text="@string/goal"
+                    android:padding="10dp"
+                    android:textSize="16dp"
+                    android:textColor="@color/black"
+                    android:fontFamily="@font/nunito_bold"
+                    />
+                <TextView
+                    android:id="@+id/tv_goal"
+                    android:text="2 km"
+                    android:gravity="right"
+                    android:padding="10dp"
+                    android:textSize="16dp"
+                    android:textColor="#E57373"
+                    android:fontFamily="@font/nunito_extrabold"
+                    />
+            </TableRow>
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:text="@string/average_speed"
+                    android:padding="10dp"
+                    android:textSize="16dp"
+                    android:textColor="@color/black"
+                    android:fontFamily="@font/nunito_bold"
+                    />
+                <TextView
+                    android:id="@+id/tv_avg_speed"
+                    android:text="3.14 km/h"
+                    android:gravity="right"
+                    android:padding="10dp"
+                    android:textSize="16dp"
+                    android:textColor="@color/black"
+                    android:fontFamily="@font/nunito_extrabold"
+                    />
+            </TableRow>
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:text="@string/money_raised"
+                    android:padding="10dp"
+                    android:textSize="16dp"
+                    android:textColor="@color/black"
+                    android:fontFamily="@font/nunito_bold"
+                    />
+                <TextView
+                    android:id="@+id/tv_money_raised"
+                    android:text="50 kn"
+                    android:gravity="right"
+                    android:padding="10dp"
+                    android:textSize="24dp"
+                    android:textColor="@color/colorPrimaryDark"
+                    android:fontFamily="@font/nunito_extrabold"
+                    />
+            </TableRow>
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:text=""
+                    android:padding="10dp"
+                    android:textSize="14dp"
+                    android:textColor="@color/black"
+                    android:fontFamily="@font/nunito"
+                    />
+                <TextView
+                    android:id="@+id/tv_date"
+                    android:text="28.03.2020."
+                    android:gravity="right"
+                    android:padding="10dp"
+                    android:textSize="14dp"
+                    android:textColor="@color/black"
+                    android:fontFamily="@font/nunito"
+                    />
+            </TableRow>
+        </TableLayout>
 
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 </androidx.cardview.widget.CardView>
