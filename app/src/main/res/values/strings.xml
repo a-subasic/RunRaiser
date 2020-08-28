@@ -54,4 +54,5 @@
     <string name="average_speed">Average speed</string>
     <string name="money_raised">Money raised</string>
     <string name="goal">Goal</string>
+    <string name="speed">Speed</string>
 </resources>

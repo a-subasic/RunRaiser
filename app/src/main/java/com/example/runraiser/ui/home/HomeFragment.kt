@@ -75,6 +75,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private var distance: Float = 0F
     private var distanceKm: Float = 0F
     private var speed: Float = 0F
+    private var kilometers: String = ""
+    private var valueKn: String = ""
     private lateinit var trainingId: String
     private var timesRan: Int = 0
 
@@ -133,8 +135,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             mDialogView.ok_btn.setOnClickListener {
                 //get text from EditTexts of custom layout
                 trainingId = UUID.randomUUID().toString().replace("-", "").toUpperCase(Locale.ROOT)
-                val kilometers = mDialogView.et_kilometers.text.toString()
-                val valueKn = mDialogView.et_value.text.toString()
+                kilometers = mDialogView.et_kilometers.text.toString()
+                valueKn = mDialogView.et_value.text.toString()
 
                 if(mDialogView.et_kilometers.text.toString().isEmpty() || mDialogView.et_value.text.toString().isEmpty()) {
                     Toast.makeText(activity, "Please fill out all fields.", Toast.LENGTH_SHORT).show()
@@ -146,6 +148,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 else if (valueKn.toInt() > 100) {
                     mDialogView.et_value.error = "Maximum is 100kn"
                     mDialogView.et_value.requestFocus()
+                }
+                else if(kilometers.toInt() == 0 || valueKn.toInt() == 0) {
+                    Toast.makeText(activity, "Enter something greater than zero.", Toast.LENGTH_SHORT).show()
                 }
                 else {
                     mAlertDialog.dismiss()
@@ -171,10 +176,15 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     start_btn.visibility = View.GONE
                     training_content.visibility = View.VISIBLE
                     stop_btn.visibility = View.VISIBLE
-                    reset_btn.visibility = View.GONE
+                    reset_layout.visibility = View.GONE
 
                     tv_distance.text = distance.toString()
                     tv_speed.text = speed.toString()
+                    tv_goal.text = kilometers + " km"
+                    if(distanceKm.toDouble() >= kilometers.toDouble()) {
+                        tv_goal.setTextColor(Color.parseColor("#81C784"))
+                    }
+
                     chronometer.base = SystemClock.elapsedRealtime()+stopTime
                     chronometer.start()
                     timer = Timer()
@@ -225,7 +235,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 reset_btn.setOnClickListener {
                     training_content.visibility = View.GONE
                     start_btn.visibility = View.VISIBLE
-                    reset_btn.visibility = View.GONE
+                    reset_layout.visibility = View.GONE
 
                     mMap.clear()
 
@@ -463,9 +473,16 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             distance = BigDecimal(distance.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
             tv_distance.text = distance.toString() + " m"
         }
+
+        if(distanceKm.toDouble() >= kilometers.toDouble()) {
+            tv_goal.setTextColor(Color.parseColor("#81C784"))
+        }
         speed = BigDecimal(speed.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
         speedArray.add(speed)
         tv_speed.text = speed.toString() + " km/h"
+
+        val raisedVal = (kotlin.math.floor(distanceKm) * valueKn.toDouble()).toInt()
+        tv_money_raised.text = raisedVal.toString() + " kn"
         previousLatLng = end
     }
 

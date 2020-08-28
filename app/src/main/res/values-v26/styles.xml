@@ -7,6 +7,7 @@
         <item name="colorPrimaryDark">#7D080A</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:autofilledHighlight">@android:color/transparent</item>
+<!--        <item name="android:fontFamily">@font/nunito</item>-->
     </style>
 
     <style name="ProgressBarTheme" parent="ThemeOverlay.AppCompat.Light">
