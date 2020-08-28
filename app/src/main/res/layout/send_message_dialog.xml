@@ -14,6 +14,7 @@
         android:ems="10"
         android:layout_margin="8dp"
         android:inputType="text"
+        android:maxLength="25"
         android:autofillHints=""
         tools:ignore="LabelFor" />
 
