@@ -21,7 +21,7 @@
     <color name="icFocused">#DDFFFFFF</color>
     <color name="icPressed">#AAFFFFFF</color>
 
-    <color name="textTabLight">#6BFFFFFF</color>
+    <color name="textTabLight">#5E5E5E</color>
 
     <color name="radio_red">#DF0101</color>
     <color name="radio_green">#04B404</color>

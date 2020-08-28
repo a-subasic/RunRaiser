@@ -1,23 +1,20 @@
 package com.example.runraiser.ui.history
 
-import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.request.RequestOptions
 import com.example.runraiser.R
-import kotlinx.android.synthetic.main.layout_history_card_item.view.*
+import kotlinx.android.synthetic.main.layout_training_card_item.view.*
 
-class HistoryRecyclerAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class TrainingsRecyclerAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var items: List<HistoryCard> = ArrayList()
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return SelectGroupViewHolder(
-            LayoutInflater.from(parent.context).inflate(R.layout.layout_history_card_item, parent, false)
+            LayoutInflater.from(parent.context).inflate(R.layout.layout_training_card_item, parent, false)
         )
     }
 
