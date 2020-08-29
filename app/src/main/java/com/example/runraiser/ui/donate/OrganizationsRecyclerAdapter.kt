@@ -133,6 +133,7 @@ class OrganizationsRecyclerAdapter : RecyclerView.Adapter<RecyclerView.ViewHolde
                         }
 
                         Firebase.databaseDonations?.child(donationId)?.child("date")?.setValue(startDate)
+                        Firebase.databaseDonations?.child(donationId)?.child("userId")?.setValue(FirebaseAuth.getInstance().uid!!)
                         mAlertDialog.dismiss()
                     }
                     else {

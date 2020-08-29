@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.viewpager.widget.ViewPager
+import com.example.runraiser.DonationsDataCallback
 import com.example.runraiser.R
 import com.example.runraiser.TrainingsDataCallback
 
@@ -50,20 +51,26 @@ class HistoryFragment : Fragment() {
 
         HistoryData.fetchTrainingsData(object : TrainingsDataCallback {
             override fun onTrainingsDataCallback(myTrainingsData: ArrayList<HistoryCard>) {
-                val adapter = HistoryPagerViewAdapter(requireActivity().supportFragmentManager)
 
-                vpHistory?.adapter = adapter
+                HistoryData.fetchDonationsData(object: DonationsDataCallback {
+                    override fun onDonationsDataCallback(myDonationsData: ArrayList<DonationCard>) {
+                        val adapter = HistoryPagerViewAdapter(requireActivity().supportFragmentManager)
 
-                vpHistory?.addOnPageChangeListener(object: ViewPager.OnPageChangeListener {
-                    override fun onPageScrollStateChanged(state: Int) {
+                        vpHistory?.adapter = adapter
+
+                        vpHistory?.addOnPageChangeListener(object: ViewPager.OnPageChangeListener {
+                            override fun onPageScrollStateChanged(state: Int) {
+                            }
+
+                            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+                            }
+
+                            override fun onPageSelected(position: Int) {
+                                changeTabs(position)
+                            }
+                        })
                     }
 
-                    override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
-                    }
-
-                    override fun onPageSelected(position: Int) {
-                        changeTabs(position)
-                    }
                 })
             }
         })
