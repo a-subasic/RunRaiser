@@ -76,6 +76,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private var distanceKm: Float = 0F
     private var speed: Float = 0F
     private var kilometers: String = ""
+    private var raisedVal: Int = 0
     private var valueKn: String = ""
     private lateinit var trainingId: String
     private var timesRan: Int = 0
@@ -207,7 +208,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                             ?.setMessage("You raised $raisedVal kn!")
                             ?.setPositiveButton("OK :)") { dialog, _ ->
                                 stop_btn.visibility = View.GONE
-                                reset_btn.visibility = View.VISIBLE
+                                reset_layout.visibility = View.VISIBLE
                                 dialog.cancel()
                             }?.setCancelable(false)
                             ?.show()
@@ -217,7 +218,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                             ?.setMessage("Unfortunately you didn’t run enough mileage to raise money.")
                             ?.setPositiveButton("OK :(") { dialog, _ ->
                                 stop_btn.visibility = View.GONE
-                                reset_btn.visibility = View.VISIBLE
+                                reset_layout.visibility = View.VISIBLE
                                 dialog.cancel()
                             }?.setCancelable(false)
                             ?.show()
@@ -239,6 +240,23 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
                     mMap.clear()
 
+                    var sumMoneyRaised = ""
+                    Firebase.databaseUsers?.child("$userId/fund")?.addListenerForSingleValueEvent(object: ValueEventListener {
+                        override fun onCancelled(error: DatabaseError) {
+                        }
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            sumMoneyRaised = snapshot.value.toString()
+                            sumMoneyRaised =
+                                (sumMoneyRaised.toInt() + raisedVal).toString()
+                            Firebase.databaseUsers?.child("$userId/moneyRaised")?.setValue(sumMoneyRaised)
+                            raisedVal = 0
+                        }
+                    })
+
+                    if(distanceKm < 1) {
+                        distanceKm = BigDecimal(distanceKm.toDouble()).setScale(3, RoundingMode.HALF_EVEN).toFloat()
+                    }
+
                     val locationRequest = LocationRequest()
                     locationRequest.interval = 10000
                     locationRequest.fastestInterval = 3000
@@ -257,7 +275,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                                 val sydney = LatLng(latitude, longitude)
                                 previousLatLng = sydney
                                 latLngArray.add(previousLatLng)
-                                marker = mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
+                                marker = mMap.addMarker(MarkerOptions().position(sydney).title("Me")
+                                    .icon(BitmapDescriptorFactory.fromBitmap(ActiveUsersData.usersBitmapMarker[userId])).anchor(0.5f, 0.5f))
+                                marker.tag = userId
                                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 25.0f))
                             }
                         }
@@ -281,8 +301,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
 
         openMessageWindow()
-
-//        mMap.addCircle(CircleOptions().center(LatLng(45.3310694, 14.4303084)).radius(500.0).strokeColor(Color.RED).fillColor(0x220000FF).strokeWidth(7.0f))
 
 //        val URL = getDirectionURL(location1, location2)
 //        GetDirection(URL).execute()
@@ -481,7 +499,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         speedArray.add(speed)
         tv_speed.text = speed.toString() + " km/h"
 
-        val raisedVal = (kotlin.math.floor(distanceKm) * valueKn.toDouble()).toInt()
+        raisedVal = (kotlin.math.floor(distanceKm) * valueKn.toDouble()).toInt()
         tv_money_raised.text = raisedVal.toString() + " kn"
         previousLatLng = end
     }
@@ -508,7 +526,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     val endLatLng = LatLng(respObj.routes[0].legs[0].steps[i].end_location.lat.toDouble()
                         ,respObj.routes[0].legs[0].steps[i].end_location.lng.toDouble())
                     path.add(endLatLng)
-//                    println(i)
 //                    path.addAll(decodePolyline(respObj.routes[0].legs[0].steps[i].polyline.points))
                 }
                 result.add(path)
@@ -572,6 +589,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private fun snapShot() {
         val callback: GoogleMap.SnapshotReadyCallback = object : GoogleMap.SnapshotReadyCallback {
             var bitmap: Bitmap? = null
+            @RequiresApi(Build.VERSION_CODES.N)
             override fun onSnapshotReady(snapshot: Bitmap) {
                 bitmap = snapshot
                 saveImage(bitmap!!)
@@ -580,6 +598,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         mMap.snapshot(callback)
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     @Throws(IOException::class)
     private fun saveImage(bitmap: Bitmap) {
         val contentValues = ContentValues()
@@ -608,6 +627,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     private fun uploadProfilePhotoToFirebaseStorage(uri: Uri) {
         val refStorage =
             FirebaseStorage.getInstance().getReference("/images/maps_screenshots/${trainingId}")
@@ -627,6 +647,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             }
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     private fun saveProfilePhotoToFirebaseDatabase(trainingImageUrl: String) {
         val endDate: String?
         endDate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -658,6 +679,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         timesRan = 0
         latLngArray = ArrayList()
         speedArray = ArrayList()
+
+        activeUsersMarkers.forEach { (s, marker) ->
+            marker.isVisible = false
+        }
     }
 
     private fun zoomRoute(
