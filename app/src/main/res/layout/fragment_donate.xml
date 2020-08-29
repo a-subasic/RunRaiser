@@ -11,14 +11,16 @@
         android:id="@+id/cardView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginVertical="10dp"
         app:cardCornerRadius="20dp"
         app:cardElevation="0dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginHorizontal="10dp"
-        app:cardPreventCornerOverlap="false"
+        app:cardPreventCornerOverlap="true"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -29,17 +31,18 @@
                 android:id="@+id/tv_fund"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:textSize="32sp"
                 android:fontFamily="@font/nunito_extrabold"
+                android:gravity="center"
+                android:text="0 kn"
                 android:textColor="@color/colorPrimaryDark"
-                android:text="250 kn" />
+                android:textSize="32sp" />
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/nunito_bold"
                 android:gravity="center"
                 android:paddingBottom="5dp"
-                android:fontFamily="@font/nunito_bold"
                 android:text="Fund" />
 
         </LinearLayout>
@@ -48,10 +51,9 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_marginHorizontal="10dp"
-        android:layout_marginTop="10dp"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="80dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/cardView">
 

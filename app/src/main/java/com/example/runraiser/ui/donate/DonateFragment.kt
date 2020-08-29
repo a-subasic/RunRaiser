@@ -28,6 +28,10 @@ class DonateFragment : Fragment() {
     private lateinit var donateViewModel: DonateViewModel
     private lateinit var organizationsAdapter: OrganizationsRecyclerAdapter
 
+    companion object {
+        var fund: Int = 0
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -46,6 +50,7 @@ class DonateFragment : Fragment() {
             }
             override fun onDataChange(snapshot: DataSnapshot) {
                 tv_fund.text = snapshot.value.toString() + " kn"
+                fund = snapshot.value.toString().toInt()
             }
         })
 

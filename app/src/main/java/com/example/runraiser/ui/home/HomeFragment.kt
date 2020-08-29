@@ -134,7 +134,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 .setView(mDialogView)
                 .setTitle("Training Setup")
 
-            val  mAlertDialog = mBuilder.show()
+            val mAlertDialog = mBuilder.show()
 
             mDialogView.ok_btn.setOnClickListener {
                 //get text from EditTexts of custom layout
