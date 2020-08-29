@@ -60,11 +60,7 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        ActiveUsersData.getUsersMarkers(this, object: UsersMarkersDataCallback {
-            override fun onUsersMarkersDataCallback() {
-                initialise()
-            }
-        })
+        initialise()
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
@@ -142,7 +138,6 @@ class LoginActivity : AppCompatActivity() {
 
             mAuth!!.signInWithEmailAndPassword(email!!, password!!)
                 .addOnCompleteListener(this) { task ->
-                    mProgressBar?.visibility = View.INVISIBLE
                     if (task.isSuccessful) {
                         // Sign in success, update UI with signed-in user's information
                         Log.d(tag, "signInWithEmail:success")
@@ -171,7 +166,12 @@ class LoginActivity : AppCompatActivity() {
                                 ?.setValue(tokenId)
                         }
 
-                        updateUI()
+                        ActiveUsersData.getUsersMarkers(this, object: UsersMarkersDataCallback {
+                            override fun onUsersMarkersDataCallback() {
+                                mProgressBar?.visibility = View.INVISIBLE
+                                updateUI()
+                            }
+                        })
                     } else {
                         // If sign in fails, display a message to the user.
                         Log.e(tag, "signInWithEmail:failure", task.exception)
