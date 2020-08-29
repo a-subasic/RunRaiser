@@ -53,7 +53,7 @@ class ActiveUsersData {
         }
 
         @RequiresApi(Build.VERSION_CODES.N)
-        fun getUsersMarkers(context: Context) {
+        fun getUsersMarkers(context: Context, usersMarkersDataCallback: UsersMarkersDataCallback) {
             usersBitmapMarker = HashMap()
             Firebase.databaseUsers?.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onCancelled(error: DatabaseError) {
@@ -88,6 +88,7 @@ class ActiveUsersData {
                                 }
                             })
                     }
+                    usersMarkersDataCallback.onUsersMarkersDataCallback()
                 }
             })
         }

@@ -56,4 +56,6 @@
     <string name="money_raised">Money raised</string>
     <string name="goal">Goal</string>
     <string name="speed">Speed</string>
+    <string name="donate">Donate</string>
+    <string name="select">Select</string>
 </resources>

@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.runraiser.Firebase
 import com.example.runraiser.R
 import com.example.runraiser.MainActivity
+import com.example.runraiser.UsersMarkersDataCallback
 import com.example.runraiser.ui.home.ActiveUsersData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
@@ -56,12 +57,14 @@ class LoginActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onCreate(savedInstanceState: Bundle?) {
-        ActiveUsersData.getUsersMarkers(this)
-
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        initialise()
+        ActiveUsersData.getUsersMarkers(this, object: UsersMarkersDataCallback {
+            override fun onUsersMarkersDataCallback() {
+                initialise()
+            }
+        })
     }
 
     @RequiresApi(Build.VERSION_CODES.N)

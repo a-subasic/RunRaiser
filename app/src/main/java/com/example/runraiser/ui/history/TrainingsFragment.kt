@@ -32,7 +32,7 @@ class TrainingsFragment : Fragment() {
     }
 
     private fun addDataSet() {
-        Log.i(tag, "Fetched trainings data: " + HistoryData.myTrainingsData)
+        Log.i(tag, "Fetched trainings data")
         trainingsAdapter.submitList(HistoryData.myTrainingsData)
     }
 
@@ -44,9 +44,5 @@ class TrainingsFragment : Fragment() {
             trainingsAdapter = TrainingsRecyclerAdapter()
             adapter = trainingsAdapter
         }
-    }
-
-    companion object {
-
     }
 }

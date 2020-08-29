@@ -12,6 +12,7 @@ class Firebase {
         var database: FirebaseDatabase? = FirebaseDatabase.getInstance()
         var databaseUsers: DatabaseReference? = database!!.reference.child("Users")
         var databaseTrainings: DatabaseReference? = database!!.reference.child("Trainings")
+        var databaseOrganizations: DatabaseReference? = database!!.reference.child("Organizations")
         var userId: String = auth!!.currentUser!!.uid
         val currentUserDb = databaseUsers!!.child(userId)
     }

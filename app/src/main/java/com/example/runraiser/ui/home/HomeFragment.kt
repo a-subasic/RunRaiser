@@ -122,10 +122,13 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 addActiveUsersPins()
             }
         })
-
         var stopTime: Long = 0
         var timer: Timer? = null
+
         start_btn.setOnClickListener {
+            stopTime = 0
+            timer = null
+
             val mDialogView = LayoutInflater.from(context).inflate(R.layout.trainig_setup_dialog, null)
             val mBuilder = AlertDialog.Builder(context)
                 .setView(mDialogView)
@@ -158,11 +161,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     var startDate: String?
                     startDate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         val current = LocalDateTime.now()
-                        val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+                        val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
                         current.format(formatter)
                     } else {
                         val date = Date()
-                        val formatter = SimpleDateFormat("dd.MM.yyyy")
+                        val formatter = SimpleDateFormat("dd.MM.yyyy HH:mm")
                         formatter.format(date)
                     }
                     val training =
@@ -237,6 +240,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     training_content.visibility = View.GONE
                     start_btn.visibility = View.VISIBLE
                     reset_layout.visibility = View.GONE
+                    circle = null
+                    tv_goal.setTextColor(Color.parseColor("#E57373"))
 
                     mMap.clear()
 
@@ -248,7 +253,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                             sumMoneyRaised = snapshot.value.toString()
                             sumMoneyRaised =
                                 (sumMoneyRaised.toInt() + raisedVal).toString()
-                            Firebase.databaseUsers?.child("$userId/moneyRaised")?.setValue(sumMoneyRaised)
+                            Firebase.databaseUsers?.child("$userId/fund")?.setValue(sumMoneyRaised)
                             raisedVal = 0
                         }
                     })
@@ -415,20 +420,15 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             override fun onKeyEntered(key: String?, location: GeoLocation?) {
                 if(entered[key] == 0 && key != userId && ActiveUsersData.activeUsersData[key]?.username != null) sendNotification("ENTERED", String.format("%s entered the dangerous area",
                     ActiveUsersData.activeUsersData[key]?.username))
-                if (key != null) {
-                    entered[key]?.plus(1)?.let { entered.put(key, it) }
-                }
+
+                entered[key]?.plus(1)?.let { entered.put(key!!, it) }
                 activeUsersMarkers[key]?.isVisible = true
             }
 
             override fun onKeyMoved(key: String?, location: GeoLocation?) {
-                println("moving")
-                println(key)
             }
 
             override fun onKeyExited(key: String?) {
-                println("exited")
-                println(key)
                 if (key != null) {
                     entered.put(key, 0)
                 }
