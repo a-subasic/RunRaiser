@@ -71,6 +71,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".ui.settings.ChangePasswordActivity" />
+        <activity android:name=".ui.settings.ChangeEmailActivity" />
 
         <service
             android:name=".notificationActivities.FirebaseMessagingService"
