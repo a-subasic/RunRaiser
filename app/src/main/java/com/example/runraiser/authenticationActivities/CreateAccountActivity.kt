@@ -215,7 +215,11 @@ class CreateAccountActivity : AppCompatActivity() {
                                 "https://firebasestorage.googleapis.com/v0/b/runraiser2020.appspot.com/o/avatar_square_blue_120dp.png?alt=media&token=ea517c84-ab7a-41fd-a08a-8f84ca29a1dd",
                                 false,
                                 0.00,
-                                0.00
+                                0.00,
+                                0,
+                                0,
+                                5,
+                                10
                             )
                             currentUserDb.setValue(user).addOnSuccessListener {
                                 updateUserInfoAndUI()
@@ -283,4 +287,4 @@ class CreateAccountActivity : AppCompatActivity() {
 }
 
 class User(val id: String, val email: String, val fullName: String, val username: String, val profilePhotoUrl: String,
-           val inTraining: Boolean, val lastLat: Double, val lastLng: Double)
+           val inTraining: Boolean, val lastLat: Double, val lastLng: Double, val fund: Int, val sumDonationsMoney: Int, val defaultKm: Int, val defaultValue: Int)

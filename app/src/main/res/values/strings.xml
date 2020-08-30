@@ -11,6 +11,8 @@
     <string name="menu_gallery">Gallery</string>
     <string name="menu_slideshow">Slideshow</string>
     <string name="menu_history">History</string>
+    <string name="menu_donate">Donate</string>
+    <string name="menu_settings">Settings</string>
 
     <string name="home_second">Home Second</string>
     <string name="title_activity_maps">Map</string>
@@ -42,4 +44,33 @@
     <string name="desired_mileage">Desired mileage (km)</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
+    <string name="message_hy">Hello &#x1F44B;</string>
+    <string name="message_race">Let\'s race! &#x1F3C3;</string>
+    <string name="message_fast">&#x1F680;&#x1F680;&#x1F4AA;&#x1F4AA;</string>
+    <string name="message_left">On your left &#x1F440;</string>
+    <string name="emoji_running">&#x1F3C3;&#x1F3C3;&#x1F3C3;</string>
+    <string name="emoji_strong">Let\'s race! &#x1F4AA;&#x1F44B;</string>
+    <string name="emoji">&#x1F3C3;&#x1F4AA;&#x1F44B;</string>
+    <string name="duration">Duration</string>
+    <string name="distance">Distance</string>
+    <string name="average_speed">Average speed</string>
+    <string name="money_raised">Money raised</string>
+    <string name="goal">Goal</string>
+    <string name="speed">Speed</string>
+    <string name="donate">Donate</string>
+    <string name="select">Select</string>
+    <string name="check" />
+    <string name="select_photo">Select Photo</string>
+    <string name="name">Full name</string>
+    <string name="account_settings">Account settings</string>
+    <string name="change_password">Change password</string>
+    <string name="change_email">Change email</string>
+    <string name="delete_account">Delete account</string>
+    <string name="current_password">Current password</string>
+    <string name="new_password">New password</string>
+    <string name="confirm_new_password">Confirm new password</string>
+    <string name="save">Save</string>
+    <string name="new_email_address">New email address</string>
+    <string name="update_email">Update E-mail</string>
+    <string name="update_email_description">By clicking save, verification email will be sent to the new email address you provided.</string>
 </resources>

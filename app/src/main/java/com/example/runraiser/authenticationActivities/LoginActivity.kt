@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.runraiser.Firebase
 import com.example.runraiser.R
 import com.example.runraiser.MainActivity
+import com.example.runraiser.UsersMarkersDataCallback
 import com.example.runraiser.ui.home.ActiveUsersData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
@@ -56,8 +57,6 @@ class LoginActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onCreate(savedInstanceState: Bundle?) {
-        ActiveUsersData.getUsersMarkers(this)
-
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
@@ -139,7 +138,6 @@ class LoginActivity : AppCompatActivity() {
 
             mAuth!!.signInWithEmailAndPassword(email!!, password!!)
                 .addOnCompleteListener(this) { task ->
-                    mProgressBar?.visibility = View.INVISIBLE
                     if (task.isSuccessful) {
                         // Sign in success, update UI with signed-in user's information
                         Log.d(tag, "signInWithEmail:success")
@@ -168,9 +166,15 @@ class LoginActivity : AppCompatActivity() {
                                 ?.setValue(tokenId)
                         }
 
-                        updateUI()
+                        ActiveUsersData.getUsersMarkers(this, object: UsersMarkersDataCallback {
+                            override fun onUsersMarkersDataCallback() {
+                                mProgressBar?.visibility = View.INVISIBLE
+                                updateUI()
+                            }
+                        })
                     } else {
                         // If sign in fails, display a message to the user.
+                        mProgressBar?.visibility = View.INVISIBLE
                         Log.e(tag, "signInWithEmail:failure", task.exception)
                         Toast.makeText(this@LoginActivity, "Authentication failed.",
                             Toast.LENGTH_SHORT).show()

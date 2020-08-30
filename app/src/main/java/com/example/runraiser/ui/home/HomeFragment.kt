@@ -11,6 +11,7 @@ import android.location.Location
 import android.net.Uri
 import android.os.*
 import android.provider.MediaStore
+import android.text.InputType
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -74,6 +75,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private var distance: Float = 0F
     private var distanceKm: Float = 0F
     private var speed: Float = 0F
+    private var kilometers: String = ""
+    private var raisedVal: Int = 0
+    private var valueKn: String = ""
     private lateinit var trainingId: String
     private var timesRan: Int = 0
 
@@ -118,22 +122,35 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 addActiveUsersPins()
             }
         })
-
         var stopTime: Long = 0
         var timer: Timer? = null
+
         start_btn.setOnClickListener {
+            stopTime = 0
+            timer = null
+
             val mDialogView = LayoutInflater.from(context).inflate(R.layout.trainig_setup_dialog, null)
             val mBuilder = AlertDialog.Builder(context)
                 .setView(mDialogView)
                 .setTitle("Training Setup")
 
-            val  mAlertDialog = mBuilder.show()
+            val mAlertDialog = mBuilder.show()
+
+            val userRef = Firebase.databaseUsers!!.child("/$userId")
+            userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onCancelled(error: DatabaseError) {
+                }
+
+                override fun onDataChange(p0: DataSnapshot) {
+                    mDialogView.et_kilometers.setText(p0.child("/defaultKm").value.toString())
+                    mDialogView.et_value.setText(p0.child("/defaultValue").value.toString())
+                }})
 
             mDialogView.ok_btn.setOnClickListener {
                 //get text from EditTexts of custom layout
                 trainingId = UUID.randomUUID().toString().replace("-", "").toUpperCase(Locale.ROOT)
-                val kilometers = mDialogView.et_kilometers.text.toString()
-                val valueKn = mDialogView.et_value.text.toString()
+                kilometers = mDialogView.et_kilometers.text.toString()
+                valueKn = mDialogView.et_value.text.toString()
 
                 if(mDialogView.et_kilometers.text.toString().isEmpty() || mDialogView.et_value.text.toString().isEmpty()) {
                     Toast.makeText(activity, "Please fill out all fields.", Toast.LENGTH_SHORT).show()
@@ -145,6 +162,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 else if (valueKn.toInt() > 100) {
                     mDialogView.et_value.error = "Maximum is 100kn"
                     mDialogView.et_value.requestFocus()
+                }
+                else if(kilometers.toInt() == 0 || valueKn.toInt() == 0) {
+                    Toast.makeText(activity, "Enter something greater than zero.", Toast.LENGTH_SHORT).show()
                 }
                 else {
                     mAlertDialog.dismiss()
@@ -170,10 +190,15 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     start_btn.visibility = View.GONE
                     training_content.visibility = View.VISIBLE
                     stop_btn.visibility = View.VISIBLE
-                    reset_btn.visibility = View.GONE
+                    reset_layout.visibility = View.GONE
 
                     tv_distance.text = distance.toString()
                     tv_speed.text = speed.toString()
+                    tv_goal.text = kilometers + " km"
+                    if(distanceKm.toDouble() >= kilometers.toDouble()) {
+                        tv_goal.setTextColor(Color.parseColor("#81C784"))
+                    }
+
                     chronometer.base = SystemClock.elapsedRealtime()+stopTime
                     chronometer.start()
                     timer = Timer()
@@ -196,7 +221,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                             ?.setMessage("You raised $raisedVal kn!")
                             ?.setPositiveButton("OK :)") { dialog, _ ->
                                 stop_btn.visibility = View.GONE
-                                reset_btn.visibility = View.VISIBLE
+                                reset_layout.visibility = View.VISIBLE
                                 dialog.cancel()
                             }?.setCancelable(false)
                             ?.show()
@@ -206,7 +231,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                             ?.setMessage("Unfortunately you didn’t run enough mileage to raise money.")
                             ?.setPositiveButton("OK :(") { dialog, _ ->
                                 stop_btn.visibility = View.GONE
-                                reset_btn.visibility = View.VISIBLE
+                                reset_layout.visibility = View.VISIBLE
                                 dialog.cancel()
                             }?.setCancelable(false)
                             ?.show()
@@ -224,9 +249,28 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 reset_btn.setOnClickListener {
                     training_content.visibility = View.GONE
                     start_btn.visibility = View.VISIBLE
-                    reset_btn.visibility = View.GONE
+                    reset_layout.visibility = View.GONE
+                    circle = null
+                    tv_goal.setTextColor(Color.parseColor("#E57373"))
 
                     mMap.clear()
+
+                    var sumMoneyRaised = ""
+                    Firebase.databaseUsers?.child("$userId/fund")?.addListenerForSingleValueEvent(object: ValueEventListener {
+                        override fun onCancelled(error: DatabaseError) {
+                        }
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            sumMoneyRaised = snapshot.value.toString()
+                            sumMoneyRaised =
+                                (sumMoneyRaised.toInt() + raisedVal).toString()
+                            Firebase.databaseUsers?.child("$userId/fund")?.setValue(sumMoneyRaised)
+                            raisedVal = 0
+                        }
+                    })
+
+                    if(distanceKm < 1) {
+                        distanceKm = BigDecimal(distanceKm.toDouble()).setScale(3, RoundingMode.HALF_EVEN).toFloat()
+                    }
 
                     val locationRequest = LocationRequest()
                     locationRequest.interval = 10000
@@ -246,7 +290,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                                 val sydney = LatLng(latitude, longitude)
                                 previousLatLng = sydney
                                 latLngArray.add(previousLatLng)
-                                marker = mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
+                                marker = mMap.addMarker(MarkerOptions().position(sydney).title("Me")
+                                    .icon(BitmapDescriptorFactory.fromBitmap(ActiveUsersData.usersBitmapMarker[userId])).anchor(0.5f, 0.5f))
+                                marker.tag = userId
                                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 25.0f))
                             }
                         }
@@ -270,8 +316,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
 
         openMessageWindow()
-
-//        mMap.addCircle(CircleOptions().center(LatLng(45.3310694, 14.4303084)).radius(500.0).strokeColor(Color.RED).fillColor(0x220000FF).strokeWidth(7.0f))
 
 //        val URL = getDirectionURL(location1, location2)
 //        GetDirection(URL).execute()
@@ -386,20 +430,15 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             override fun onKeyEntered(key: String?, location: GeoLocation?) {
                 if(entered[key] == 0 && key != userId && ActiveUsersData.activeUsersData[key]?.username != null) sendNotification("ENTERED", String.format("%s entered the dangerous area",
                     ActiveUsersData.activeUsersData[key]?.username))
-                if (key != null) {
-                    entered[key]?.plus(1)?.let { entered.put(key, it) }
-                }
+
+                entered[key]?.plus(1)?.let { entered.put(key!!, it) }
                 activeUsersMarkers[key]?.isVisible = true
             }
 
             override fun onKeyMoved(key: String?, location: GeoLocation?) {
-                println("moving")
-                println(key)
             }
 
             override fun onKeyExited(key: String?) {
-                println("exited")
-                println(key)
                 if (key != null) {
                     entered.put(key, 0)
                 }
@@ -462,9 +501,16 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             distance = BigDecimal(distance.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
             tv_distance.text = distance.toString() + " m"
         }
+
+        if(distanceKm.toDouble() >= kilometers.toDouble()) {
+            tv_goal.setTextColor(Color.parseColor("#81C784"))
+        }
         speed = BigDecimal(speed.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
         speedArray.add(speed)
         tv_speed.text = speed.toString() + " km/h"
+
+        raisedVal = (kotlin.math.floor(distanceKm) * valueKn.toDouble()).toInt()
+        tv_money_raised.text = raisedVal.toString() + " kn"
         previousLatLng = end
     }
 
@@ -490,7 +536,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     val endLatLng = LatLng(respObj.routes[0].legs[0].steps[i].end_location.lat.toDouble()
                         ,respObj.routes[0].legs[0].steps[i].end_location.lng.toDouble())
                     path.add(endLatLng)
-//                    println(i)
 //                    path.addAll(decodePolyline(respObj.routes[0].legs[0].steps[i].polyline.points))
                 }
                 result.add(path)
@@ -554,6 +599,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private fun snapShot() {
         val callback: GoogleMap.SnapshotReadyCallback = object : GoogleMap.SnapshotReadyCallback {
             var bitmap: Bitmap? = null
+            @RequiresApi(Build.VERSION_CODES.N)
             override fun onSnapshotReady(snapshot: Bitmap) {
                 bitmap = snapshot
                 saveImage(bitmap!!)
@@ -562,6 +608,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         mMap.snapshot(callback)
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     @Throws(IOException::class)
     private fun saveImage(bitmap: Bitmap) {
         val contentValues = ContentValues()
@@ -590,6 +637,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     private fun uploadProfilePhotoToFirebaseStorage(uri: Uri) {
         val refStorage =
             FirebaseStorage.getInstance().getReference("/images/maps_screenshots/${trainingId}")
@@ -609,15 +657,16 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             }
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     private fun saveProfilePhotoToFirebaseDatabase(trainingImageUrl: String) {
         val endDate: String?
         endDate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val current = LocalDateTime.now()
-            val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
+            val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
             current.format(formatter)
         } else {
             val date = Date()
-            val formatter = SimpleDateFormat("dd.MM.yyyy HH:mm")
+            val formatter = SimpleDateFormat("dd.MM.yyyy")
             formatter.format(date)
         }
 
@@ -640,6 +689,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         timesRan = 0
         latLngArray = ArrayList()
         speedArray = ArrayList()
+
+        activeUsersMarkers.forEach { (s, marker) ->
+            marker.isVisible = false
+        }
     }
 
     private fun zoomRoute(
@@ -668,9 +721,68 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                         LayoutInflater.from(context).inflate(R.layout.send_message_dialog, null)
                     val mBuilder = AlertDialog.Builder(context)
                         .setView(mDialogView)
-                        .setTitle("Message")
+                        .setTitle("Type in a message")
 
                     val mAlertDialog = mBuilder.show()
+                    mDialogView.rb1.setOnClickListener{
+                        mDialogView.rb1.isChecked = !mDialogView.rb1.isChecked
+                        if(!mDialogView.rb1.isChecked) {
+                            mDialogView.et_message.inputType = InputType.TYPE_CLASS_TEXT
+                            mDialogView.et_message.setText("")
+                        }
+                        else {
+                            mDialogView.et_message.setText(mDialogView.rb1.text.toString())
+                            mDialogView.et_message.inputType = InputType.TYPE_NULL
+                        }
+                        mDialogView.rb2.isChecked = false
+                        mDialogView.rb3.isChecked = false
+                        mDialogView.rb4.isChecked = false
+                    }
+
+                    mDialogView.rb2.setOnClickListener{
+                        mDialogView.rb2.isChecked = !mDialogView.rb2.isChecked
+                        if(!mDialogView.rb2.isChecked) {
+                            mDialogView.et_message.inputType = InputType.TYPE_CLASS_TEXT
+                            mDialogView.et_message.setText("")
+                        }
+                        else {
+                            mDialogView.et_message.setText(mDialogView.rb2.text.toString())
+                            mDialogView.et_message.inputType = InputType.TYPE_NULL
+                        }
+                        mDialogView.rb1.isChecked = false
+                        mDialogView.rb3.isChecked = false
+                        mDialogView.rb4.isChecked = false
+                    }
+
+                    mDialogView.rb3.setOnClickListener{
+                        mDialogView.rb3.isChecked = !mDialogView.rb3.isChecked
+                        if(!mDialogView.rb3.isChecked) {
+                            mDialogView.et_message.inputType = InputType.TYPE_CLASS_TEXT
+                        }
+                        else {
+                            mDialogView.et_message.setText(mDialogView.rb3.text.toString())
+                            mDialogView.et_message.inputType = InputType.TYPE_NULL
+                        }
+                        mDialogView.rb2.isChecked = false
+                        mDialogView.rb4.isChecked = false
+                        mDialogView.rb1.isChecked = false
+                    }
+
+
+                    mDialogView.rb4.setOnClickListener{
+                        mDialogView.rb4.isChecked = !mDialogView.rb4.isChecked
+                        if(!mDialogView.rb4.isChecked) {
+                            mDialogView.et_message.inputType = InputType.TYPE_CLASS_TEXT
+                        }
+                        else {
+                            mDialogView.et_message.setText(mDialogView.rb4.text.toString())
+                            mDialogView.et_message.inputType = InputType.TYPE_NULL
+                        }
+                        mDialogView.rb2.isChecked = false
+                        mDialogView.rb3.isChecked = false
+                        mDialogView.rb1.isChecked = false
+                    }
+
                     mDialogView.send_btn.setOnClickListener {
                         val message = mDialogView.et_message.text.toString()
                         if (message.isEmpty()) {

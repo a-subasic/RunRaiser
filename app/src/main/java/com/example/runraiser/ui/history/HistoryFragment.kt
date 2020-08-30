@@ -1,21 +1,23 @@
 package com.example.runraiser.ui.history
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.viewpager.widget.ViewPager
+import com.example.runraiser.DonationsDataCallback
 import com.example.runraiser.R
-import com.example.runraiser.TopSpacingItemDecoration
 import com.example.runraiser.TrainingsDataCallback
-import kotlinx.android.synthetic.main.fragment_history.*
 
 class HistoryFragment : Fragment() {
-    private lateinit var historyAdapter: HistoryRecyclerAdapter
     private lateinit var historyViewModel: HistoryViewModel
+
+    private var tvTrainings: TextView? = null
+    private var tvDonations: TextView? = null
+    private var vpHistory: ViewPager? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -30,30 +32,64 @@ class HistoryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        tvTrainings = view.findViewById(R.id.tv_trainings) as TextView
+        tvDonations = view.findViewById(R.id.tv_donations) as TextView
+        vpHistory = view.findViewById(R.id.vp_history) as ViewPager?
+
         initialise()
     }
 
     private fun initialise() {
+
+        tvTrainings!!.setOnClickListener {
+            vpHistory?.setCurrentItem(0, true)
+        }
+
+        tvDonations!!.setOnClickListener {
+            vpHistory?.setCurrentItem(1, true)
+        }
+
         HistoryData.fetchTrainingsData(object : TrainingsDataCallback {
             override fun onTrainingsDataCallback(myTrainingsData: ArrayList<HistoryCard>) {
-                initRecyclerView()
-                addDataSet()
+
+                HistoryData.fetchDonationsData(object: DonationsDataCallback {
+                    override fun onDonationsDataCallback(myDonationsData: ArrayList<DonationCard>) {
+                        val adapter = HistoryPagerViewAdapter(requireActivity().supportFragmentManager)
+
+                        vpHistory?.adapter = adapter
+
+                        vpHistory?.addOnPageChangeListener(object: ViewPager.OnPageChangeListener {
+                            override fun onPageScrollStateChanged(state: Int) {
+                            }
+
+                            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+                            }
+
+                            override fun onPageSelected(position: Int) {
+                                changeTabs(position)
+                            }
+                        })
+                    }
+
+                })
             }
         })
     }
 
-    private fun addDataSet() {
-        Log.i(tag, "Fetched trainings data: " + HistoryData.myTrainingsData)
-        historyAdapter.submitList(HistoryData.myTrainingsData)
-    }
+    private fun changeTabs(position: Int) {
+        if(position == 1) {
+            tvDonations?.setTextColor(resources.getColor(R.color.black))
+            tvDonations?.textSize = 20F
 
-    private fun initRecyclerView() {
-        rv_training_history.apply {
-            layoutManager = LinearLayoutManager(context)
-            val topSpacingDecoration = TopSpacingItemDecoration(30)
-            addItemDecoration(topSpacingDecoration)
-            historyAdapter = HistoryRecyclerAdapter()
-            adapter = historyAdapter
+            tvTrainings?.setTextColor(resources.getColor(R.color.textTabLight))
+            tvTrainings?.textSize = 16F
+        }
+        else {
+            tvTrainings?.setTextColor(resources.getColor(R.color.black))
+            tvTrainings?.textSize = 20F
+
+            tvDonations?.setTextColor(resources.getColor(R.color.textTabLight))
+            tvDonations?.textSize = 16F
         }
     }
 }
