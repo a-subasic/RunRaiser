@@ -217,7 +217,9 @@ class CreateAccountActivity : AppCompatActivity() {
                                 0.00,
                                 0.00,
                                 0,
-                                0
+                                0,
+                                5,
+                                10
                             )
                             currentUserDb.setValue(user).addOnSuccessListener {
                                 updateUserInfoAndUI()
@@ -285,4 +287,4 @@ class CreateAccountActivity : AppCompatActivity() {
 }
 
 class User(val id: String, val email: String, val fullName: String, val username: String, val profilePhotoUrl: String,
-           val inTraining: Boolean, val lastLat: Double, val lastLng: Double, val fund: Int, val sumDonationsMoney: Int)
+           val inTraining: Boolean, val lastLat: Double, val lastLng: Double, val fund: Int, val sumDonationsMoney: Int, val defaultKm: Int, val defaultValue: Int)

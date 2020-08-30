@@ -70,6 +70,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".ui.settings.ChangePasswordActivity" />
 
         <service
             android:name=".notificationActivities.FirebaseMessagingService"

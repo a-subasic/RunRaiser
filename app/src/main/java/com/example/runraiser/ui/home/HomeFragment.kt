@@ -136,6 +136,16 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
             val mAlertDialog = mBuilder.show()
 
+            val userRef = Firebase.databaseUsers!!.child("/$userId")
+            userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onCancelled(error: DatabaseError) {
+                }
+
+                override fun onDataChange(p0: DataSnapshot) {
+                    mDialogView.et_kilometers.setText(p0.child("/defaultKm").value.toString())
+                    mDialogView.et_value.setText(p0.child("/defaultValue").value.toString())
+                }})
+
             mDialogView.ok_btn.setOnClickListener {
                 //get text from EditTexts of custom layout
                 trainingId = UUID.randomUUID().toString().replace("-", "").toUpperCase(Locale.ROOT)
