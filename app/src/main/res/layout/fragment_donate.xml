@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#6A8A8A8A"
+    android:background="#CCCCCC"
+    android:id="@+id/fragment_donate"
     tools:context=".ui.donate.DonateFragment">
 
     <androidx.cardview.widget.CardView

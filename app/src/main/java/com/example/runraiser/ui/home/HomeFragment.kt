@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.graphics.*
 import android.location.Location
 import android.net.Uri
@@ -20,12 +21,14 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.replace
 import androidx.lifecycle.ViewModelProviders
 import com.bumptech.glide.request.target.CustomTarget
 import com.example.runraiser.ActiveUsersDataCallback
 import com.example.runraiser.Firebase
 import com.example.runraiser.GlideApp
 import com.example.runraiser.R
+import com.example.runraiser.ui.donate.DonateFragment
 import com.firebase.geofire.GeoFire
 import com.firebase.geofire.GeoLocation
 import com.firebase.geofire.GeoQuery
@@ -297,6 +300,24 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                             }
                         }
                     }, Looper.getMainLooper())
+                }
+                donate_btn.setOnClickListener {
+                    var sumMoneyRaised = ""
+                    Firebase.databaseUsers?.child("$userId/fund")?.addListenerForSingleValueEvent(object: ValueEventListener {
+                        override fun onCancelled(error: DatabaseError) {
+                        }
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            sumMoneyRaised = snapshot.value.toString()
+                            sumMoneyRaised =
+                                (sumMoneyRaised.toInt() + raisedVal).toString()
+                            Firebase.databaseUsers?.child("$userId/fund")?.setValue(sumMoneyRaised)
+                            raisedVal = 0
+//                            startActivity(Intent(requireContext(), DonateFragment::class.java))
+                            activity?.supportFragmentManager
+                                ?.beginTransaction()?.replace(R.id.fragment_home, DonateFragment())
+                                ?.commit()
+                        }
+                    })
                 }
             }
             //cancel button click of custom layout
