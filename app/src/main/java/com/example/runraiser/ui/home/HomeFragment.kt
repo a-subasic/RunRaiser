@@ -203,14 +203,40 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                         tv_goal.setTextColor(Color.parseColor("#81C784"))
                     }
 
-                    chronometer.base = SystemClock.elapsedRealtime()+stopTime
-                    chronometer.start()
                     timer = Timer()
+                    var flag = false
+                    val raisedAlert = AlertDialog.Builder(context)
+                    var testDialog: AlertDialog? = null
                     val task = object: TimerTask() {
                         override fun run() {
                             println("timer passed ${++timesRan} time(s)")
-                            calculateLatLng()
+//                            calculateLatLng()
+                            if(speed.toInt() > 40) {
+                                if(!flag) {
+                                    flag = true
+                                    stopTime = chronometer.base - SystemClock.elapsedRealtime()
+                                    chronometer.stop()
+                                    activity?.runOnUiThread {
+                                       testDialog = raisedAlert.setTitle("Training is paused, speed too high")
+                                           ?.setPositiveButton("Resume") { dialog, _ ->
+                                               chronometer.base = SystemClock.elapsedRealtime()+stopTime
+                                               chronometer.start()
+                                               calculateLatLng()
+                                               flag = false
+                                               dialog.cancel()
+                                           }
+                                           ?.setCancelable(false)?.show()
+                                    }
+                                }
+                            }
+                            else {
+                                calculateLatLng()
+                            }
                         }
+                    }
+                    if(testDialog == null) {
+                        chronometer.base = SystemClock.elapsedRealtime()+stopTime
+                        chronometer.start()
                     }
                     timer!!.schedule(task, 0, 1000)
                 }
@@ -243,6 +269,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     latLngArray.add(currentLatLng)
                     stopTime = chronometer.base-SystemClock.elapsedRealtime()
                     zoomRoute(mMap, latLngArray)
+                    stopTime = 0
                     chronometer.stop()
                     timer?.cancel()
 
