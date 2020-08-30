@@ -83,6 +83,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private var valueKn: String = ""
     private lateinit var trainingId: String
     private var timesRan: Int = 0
+    private var kmNotificationFlag: Boolean = false
 
     private var latLngArray: ArrayList<LatLng> = ArrayList()
     private var speedArray: ArrayList<Float> = ArrayList()
@@ -255,7 +256,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     reset_layout.visibility = View.GONE
                     circle = null
                     tv_goal.setTextColor(Color.parseColor("#E57373"))
-
+                    kmNotificationFlag = false
                     mMap.clear()
 
                     var sumMoneyRaised = ""
@@ -524,6 +525,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         }
 
         if(distanceKm.toDouble() >= kilometers.toDouble()) {
+            if(!kmNotificationFlag) {
+                sendNotification("Congrats!", "You reached your desired mileage.")
+                kmNotificationFlag = true
+            }
             tv_goal.setTextColor(Color.parseColor("#81C784"))
         }
         speed = BigDecimal(speed.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
