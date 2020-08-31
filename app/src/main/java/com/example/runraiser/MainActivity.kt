@@ -1,5 +1,6 @@
 package com.example.runraiser
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -13,6 +14,7 @@ import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import com.example.runraiser.authenticationActivities.LoginActivity
 
 class MainActivity : AppCompatActivity() {
 
@@ -33,6 +35,19 @@ class MainActivity : AppCompatActivity() {
             R.id.nav_home, R.id.nav_donate, R.id.nav_history, R.id.nav_settings, R.id.nav_gallery, R.id.nav_slideshow, R.id.nav_map), drawerLayout)
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
+
+        navView.menu.findItem(R.id.logout).setOnMenuItemClickListener {
+            val tokenMap: MutableMap<String, Any> = HashMap()
+            tokenMap["token_id"] = ""
+
+            Firebase.firestore?.collection("Users")?.document(Firebase.userId)?.update(tokenMap)
+            Firebase.databaseUsers?.child(Firebase.userId)?.child("tokenId")?.removeValue()
+            Firebase.auth?.signOut()
+            val intent = Intent(this, LoginActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            startActivity(intent)
+            return@setOnMenuItemClickListener true
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
