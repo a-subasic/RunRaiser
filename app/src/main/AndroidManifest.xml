@@ -23,7 +23,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:targetApi="m">
-        <activity android:name=".authenticationActivities.ForgotPasswordActivity" />
+        <activity android:name=".authenticationActivities.ForgotPasswordActivity" android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".authenticationActivities.VerifyEmailActivity"
             android:theme="@style/AppTheme.NoActionBar" />

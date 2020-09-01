@@ -91,7 +91,7 @@ class OrganizationsRecyclerAdapter : RecyclerView.Adapter<RecyclerView.ViewHolde
                     .setView(mDialogView)
                     .setTitle("Enter the amount of money you want to donate:")
 
-                if(DonateFragment.fund < 10)  Toast.makeText(itemView.context, "You don't have enough money to donate :(", Toast.LENGTH_SHORT).show()
+                if(DonateFragment.fund < 1)  Toast.makeText(itemView.context, "You don't have enough money to donate :(", Toast.LENGTH_SHORT).show()
 
                 else {
                     val mAlertDialog = mBuilder.show()
