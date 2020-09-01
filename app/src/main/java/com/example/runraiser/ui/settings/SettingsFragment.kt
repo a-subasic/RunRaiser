@@ -15,17 +15,20 @@ import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import com.bumptech.glide.request.RequestOptions
 import com.example.runraiser.Firebase
 import com.example.runraiser.GlideApp
 import com.example.runraiser.R
 import com.example.runraiser.UsersMarkersDataCallback
 import com.example.runraiser.authenticationActivities.LoginActivity
 import com.example.runraiser.ui.home.ActiveUsersData
+import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.storage.FirebaseStorage
 import de.hdodenhof.circleimageview.CircleImageView
+import kotlinx.android.synthetic.main.nav_header_main.*
 
 class SettingsFragment : Fragment() {
     private var mAuth: FirebaseAuth? = null
@@ -100,7 +103,7 @@ class SettingsFragment : Fragment() {
 
                     GlideApp.with(context!!)
                         .load(profilePhotoUrl)
-                        .placeholder(R.drawable.rr_logo_red)
+                        .placeholder(R.drawable.ic_launcher_background)
                         .into(imgProfilePicture!!)
                 } else {
                     imgProfilePicture?.setImageURI(UserData.profilePhotoUrl)
@@ -246,6 +249,7 @@ class SettingsFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.N)
     private fun saveProfilePhotoToFirebaseDatabase(profileImageUrl: String) {
         val ref = mDatabase!!.getReference("/Users/$uid")
+        ActiveUsersData.currentUser?.profilePhotoUrl= profileImageUrl
 
         ref.child("profilePhotoUrl").setValue(profileImageUrl)
             .addOnSuccessListener {
@@ -292,6 +296,9 @@ class SettingsFragment : Fragment() {
             map["defaultKm"] = UserData.defaultKm!!
             map["defaultValue"] = UserData.defaultValue!!
 
+            ActiveUsersData.currentUser?.fullName = UserData.name!!
+            ActiveUsersData.currentUser?.username = UserData.username!!
+
             ref.updateChildren(map)
                 .addOnSuccessListener {
                     Log.d(tag, "Updated user profile")
@@ -318,6 +325,9 @@ class SettingsFragment : Fragment() {
             map["username"] = UserData.username!!
             map["defaultKm"] = UserData.defaultKm!!
             map["defaultValue"] = UserData.defaultValue!!
+
+            ActiveUsersData.currentUser?.fullName = UserData.name!!
+            ActiveUsersData.currentUser?.username = UserData.username!!
 
             ref.updateChildren(map)
                 .addOnSuccessListener {

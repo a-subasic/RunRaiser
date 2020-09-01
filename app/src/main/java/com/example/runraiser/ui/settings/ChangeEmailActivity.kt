@@ -10,6 +10,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.example.runraiser.R
+import com.example.runraiser.ui.home.ActiveUsersData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
@@ -80,6 +81,7 @@ class ChangeEmailActivity : AppCompatActivity() {
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
                             Log.d(tag, "User email address updated.")
+                            ActiveUsersData.currentUser?.email = newEmail.toString()
                             user.sendEmailVerification().addOnCompleteListener(this) {
                                 if(it.isSuccessful) {
                                     Log.d(tag, "Verification email sent.")

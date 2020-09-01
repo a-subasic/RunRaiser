@@ -3,7 +3,7 @@
 
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimary">#7D080A</item>
         <item name="colorPrimaryDark">#7D080A</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:autofilledHighlight">@android:color/transparent</item>
