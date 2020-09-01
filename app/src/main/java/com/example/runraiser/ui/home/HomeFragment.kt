@@ -98,6 +98,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private var entered: HashMap<String, Int> = HashMap()
 
     private var mFirestore: FirebaseFirestore? = null
+    var tooFast = false
 
 
     override fun onCreateView(
@@ -204,33 +205,41 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     }
 
                     timer = Timer()
-                    var flag = false
                     val raisedAlert = AlertDialog.Builder(context)
                     var testDialog: AlertDialog? = null
                     val task = object: TimerTask() {
                         override fun run() {
-                            println("timer passed ${++timesRan} time(s)")
-//                            calculateLatLng()
+//                            println("timer passed ${++timesRan} time(s)")
+                            calculateLatLng()
                             if(speed.toInt() > 40) {
-                                if(!flag) {
-                                    flag = true
+                                if(!tooFast) {
+                                    tooFast = true
                                     stopTime = chronometer.base - SystemClock.elapsedRealtime()
                                     chronometer.stop()
                                     activity?.runOnUiThread {
-                                       testDialog = raisedAlert.setTitle("Training is paused, speed too high")
-                                           ?.setPositiveButton("Resume") { dialog, _ ->
-                                               chronometer.base = SystemClock.elapsedRealtime()+stopTime
-                                               chronometer.start()
-                                               calculateLatLng()
-                                               flag = false
-                                               dialog.cancel()
-                                           }
-                                           ?.setCancelable(false)?.show()
+//                                       testDialog = raisedAlert.setTitle("Training is paused, speed too high")
+//                                           ?.setPositiveButton("Resume") { dialog, _ ->
+//                                               chronometer.base = SystemClock.elapsedRealtime()+stopTime
+//                                               chronometer.start()
+//                                               calculateLatLng()
+//                                               tooFast = false
+//                                               dialog.cancel()
+//                                           }
+//                                           ?.setCancelable(false)?.show()
+                                        testDialog = raisedAlert.setTitle("Training is paused, speed too high").setMessage("")
+                                            ?.setCancelable(false)?.show()
                                     }
                                 }
                             }
                             else {
-                                calculateLatLng()
+                                if(tooFast) {
+                                    activity?.runOnUiThread {
+                                        chronometer.base = SystemClock.elapsedRealtime() + stopTime
+                                        chronometer.start()
+                                    }
+                                    testDialog?.cancel()
+                                }
+                                tooFast = false
                             }
                         }
                     }
@@ -531,39 +540,44 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         location2.longitude = end.longitude
         val distance_tmp = location1.distanceTo(location2)
 
-        val lineoption = PolylineOptions()
-        lineoption.add(start, end)
-        lineoption.width(10f)
-        lineoption.color(Color.BLUE)
-        lineoption.geodesic(true)
-        mMap.addPolyline(lineoption)
-//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(end, 25.0f))
-        distance += distance_tmp
-        distanceKm = distance/1000
         speed = (distance_tmp * 3.6).toFloat()
-        if(distance > 999) {
-            distanceKm = distance/1000
-            distanceKm = BigDecimal(distanceKm.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
-            tv_distance.text = distanceKm.toString() + " km"
-        }
-        else {
-            distance = BigDecimal(distance.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
-            tv_distance.text = distance.toString() + " m"
-        }
-
-        if(distanceKm.toDouble() >= kilometers.toDouble()) {
-            if(!kmNotificationFlag) {
-                sendNotification("Congrats!", "You reached your desired mileage.")
-                kmNotificationFlag = true
-            }
-            tv_goal.setTextColor(Color.parseColor("#81C784"))
-        }
         speed = BigDecimal(speed.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
-        speedArray.add(speed)
-        tv_speed.text = speed.toString() + " km/h"
 
-        raisedVal = (kotlin.math.floor(distanceKm) * valueKn.toDouble()).toInt()
-        tv_money_raised.text = raisedVal.toString() + " kn"
+        if(speed.toInt() < 40) {
+            val lineoption = PolylineOptions()
+            lineoption.add(start, end)
+            lineoption.width(10f)
+            lineoption.color(Color.BLUE)
+            lineoption.geodesic(true)
+            mMap.addPolyline(lineoption)
+//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(end, 25.0f))
+            distance += distance_tmp
+            distanceKm = distance / 1000
+            if (distance > 999) {
+                distanceKm = distance / 1000
+                distanceKm =
+                    BigDecimal(distanceKm.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
+                tv_distance.text = distanceKm.toString() + " km"
+            } else {
+                distance =
+                    BigDecimal(distance.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
+                tv_distance.text = distance.toString() + " m"
+            }
+
+            if (distanceKm.toDouble() >= kilometers.toDouble()) {
+                if (!kmNotificationFlag) {
+                    sendNotification("Congrats!", "You reached your desired mileage.")
+                    kmNotificationFlag = true
+                }
+                tv_goal.setTextColor(Color.parseColor("#81C784"))
+            }
+
+            speedArray.add(speed)
+            tv_speed.text = speed.toString() + " km/h"
+
+            raisedVal = (kotlin.math.floor(distanceKm) * valueKn.toDouble()).toInt()
+            tv_money_raised.text = raisedVal.toString() + " kn"
+        }
         previousLatLng = end
     }
 
