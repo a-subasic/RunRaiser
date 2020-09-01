@@ -116,6 +116,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        toggleButton.textOff = null
+        toggleButton.textOn = null
+        toggleButton.text = null
+
         mFirestore = FirebaseFirestore.getInstance()
 
         //setting up GeoFire
@@ -421,6 +425,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     Firebase.databaseUsers!!.child(userId).child("lastLng").setValue(currentLatLng.longitude)
 //                    geoFire.setLocation(userId, GeoLocation(currentLatLng.latitude, currentLatLng.longitude))
                     marker.position = currentLatLng
+
+                    if (toggleButton.isChecked) {
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, mMap.cameraPosition.zoom))
+                    }
+
                     addCircleArea()
                     distance(previousLatLng, currentLatLng)
                 }
