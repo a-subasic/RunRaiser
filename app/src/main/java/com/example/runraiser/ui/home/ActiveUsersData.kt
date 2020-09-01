@@ -90,9 +90,9 @@ class ActiveUsersData {
                                 ) {
                                     tmpBitmap = BitmapMarker.getCroppedBitmap(Bitmap.createScaledBitmap(resource, 100,100, true))
                                     if(id == FirebaseAuth.getInstance().uid)
-                                        tmpBitmap = BitmapMarker.addBorderToCircularBitmap(tmpBitmap!!, 5.0f, Color.RED)
-                                    else
                                         tmpBitmap = BitmapMarker.addBorderToCircularBitmap(tmpBitmap!!, 5.0f, Color.BLUE)
+                                    else
+                                        tmpBitmap = BitmapMarker.addBorderToCircularBitmap(tmpBitmap!!, 5.0f, Color.RED)
 
                                     usersBitmapMarker[id] = tmpBitmap!!
                                 }

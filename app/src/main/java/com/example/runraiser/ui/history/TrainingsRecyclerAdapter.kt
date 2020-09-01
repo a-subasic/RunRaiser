@@ -65,6 +65,7 @@ class TrainingsRecyclerAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>()
                 goal.setTextColor(Color.parseColor("#E57373"))
             }
 
+
             val requestOptions = RequestOptions()
                 .placeholder(R.drawable.ic_launcher_background)
                 .error(R.drawable.ic_launcher_background)

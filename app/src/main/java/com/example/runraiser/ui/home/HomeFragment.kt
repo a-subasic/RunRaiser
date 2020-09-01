@@ -119,6 +119,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         toggleButton.textOff = null
         toggleButton.textOn = null
         toggleButton.text = null
+        toggleButton.visibility = View.VISIBLE
 
         mFirestore = FirebaseFirestore.getInstance()
 
@@ -259,6 +260,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     val raisedAlert = AlertDialog.Builder(context)
                     Firebase.databaseUsers!!.child(userId).child("inTraining").setValue(false)
 
+                    activeUsersMarkers.forEach { (s, marker) ->
+                        marker.isVisible = false
+                    }
+
                     if(raisedVal > 0) {
                         raisedAlert.setTitle("Congratulations!")
                             ?.setMessage("You raised $raisedVal kn!")
@@ -354,6 +359,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                             Firebase.databaseUsers?.child("$userId/fund")?.setValue(sumMoneyRaised)
                             raisedVal = 0
 //                            startActivity(Intent(requireContext(), DonateFragment::class.java))
+                            toggleButton.visibility = View.GONE
                             activity?.supportFragmentManager
                                 ?.beginTransaction()?.replace(R.id.fragment_home, DonateFragment())
                                 ?.commit()
@@ -486,7 +492,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
 
         if(circle == null) {
-            circle = mMap.addCircle(CircleOptions().center(currentLatLng).radius(500.0).strokeColor(Color.BLUE).fillColor(0x220000FF).strokeWidth(5.0f))
+            circle = mMap.addCircle(CircleOptions().center(currentLatLng).radius(500.0).strokeColor(Color.BLUE).fillColor(0x200000FF).strokeWidth(0.0f))
         }
 
         circle?.center = currentLatLng
@@ -765,10 +771,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         timesRan = 0
         latLngArray = ArrayList()
         speedArray = ArrayList()
-
-        activeUsersMarkers.forEach { (s, marker) ->
-            marker.isVisible = false
-        }
     }
 
     private fun zoomRoute(
@@ -780,10 +782,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         for (latLngPoint in lstLatLngRoute) boundsBuilder.include(
             latLngPoint
         )
-        val routePadding = 100
+        val routePadding = 200
         val latLngBounds: LatLngBounds = boundsBuilder.build()
+        googleMap.setPadding(10,10,10, 10)
         googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds, routePadding))
-        googleMap.setPadding(10,10,10,10)
         Timer("Loading Map", false).schedule(2000) {
             snapShot()
         }
