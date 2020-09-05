@@ -49,7 +49,8 @@ class DonateFragment : Fragment() {
             override fun onCancelled(error: DatabaseError) {
             }
             override fun onDataChange(snapshot: DataSnapshot) {
-                tv_fund.text = snapshot.value.toString() + " kn"
+                val tvFund = view.findViewById(R.id.tv_fund) as TextView
+                tvFund.text = snapshot.value.toString() + " kn"
                 fund = snapshot.value.toString().toInt()
             }
         })

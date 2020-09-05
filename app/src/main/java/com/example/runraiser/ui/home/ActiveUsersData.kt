@@ -22,6 +22,7 @@ class ActiveUsersData {
     companion object {
         var activeUsersData = HashMap<String, ActiveUser>()
         var usersBitmapMarker = HashMap<String, Bitmap>()
+        var currentUser: CurrentUser? = null
 
         fun getActiveUsersData(activeUsersDataCallback: ActiveUsersDataCallback) {
             activeUsersData = HashMap()
@@ -66,6 +67,15 @@ class ActiveUsersData {
                         val profilePhotoUrl = it.child("profilePhotoUrl").value
                         val id = it.child("id").value.toString()
 
+                        if(id == FirebaseAuth.getInstance().uid) {
+                            currentUser = CurrentUser(
+                                id,
+                                it.child("email").value.toString(),
+                                it.child("fullName").value.toString(),
+                                it.child("username").value.toString(),
+                                profilePhotoUrl.toString())
+                        }
+
                         var tmpBitmap : Bitmap? = null
                         GlideApp.with(context)
                             .asBitmap()
@@ -80,9 +90,9 @@ class ActiveUsersData {
                                 ) {
                                     tmpBitmap = BitmapMarker.getCroppedBitmap(Bitmap.createScaledBitmap(resource, 100,100, true))
                                     if(id == FirebaseAuth.getInstance().uid)
-                                        tmpBitmap = BitmapMarker.addBorderToCircularBitmap(tmpBitmap!!, 5.0f, Color.RED)
-                                    else
                                         tmpBitmap = BitmapMarker.addBorderToCircularBitmap(tmpBitmap!!, 5.0f, Color.BLUE)
+                                    else
+                                        tmpBitmap = BitmapMarker.addBorderToCircularBitmap(tmpBitmap!!, 5.0f, Color.RED)
 
                                     usersBitmapMarker[id] = tmpBitmap!!
                                 }
@@ -94,3 +104,5 @@ class ActiveUsersData {
         }
     }
 }
+
+class CurrentUser(val id: String, var email: String, var fullName: String, var username: String, var profilePhotoUrl: String)

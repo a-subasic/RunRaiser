@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.graphics.*
 import android.location.Location
 import android.net.Uri
@@ -20,12 +21,14 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.replace
 import androidx.lifecycle.ViewModelProviders
 import com.bumptech.glide.request.target.CustomTarget
 import com.example.runraiser.ActiveUsersDataCallback
 import com.example.runraiser.Firebase
 import com.example.runraiser.GlideApp
 import com.example.runraiser.R
+import com.example.runraiser.ui.donate.DonateFragment
 import com.firebase.geofire.GeoFire
 import com.firebase.geofire.GeoLocation
 import com.firebase.geofire.GeoQuery
@@ -80,6 +83,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private var valueKn: String = ""
     private lateinit var trainingId: String
     private var timesRan: Int = 0
+    private var kmNotificationFlag: Boolean = false
 
     private var latLngArray: ArrayList<LatLng> = ArrayList()
     private var speedArray: ArrayList<Float> = ArrayList()
@@ -94,6 +98,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private var entered: HashMap<String, Int> = HashMap()
 
     private var mFirestore: FirebaseFirestore? = null
+    var tooFast = false
 
 
     override fun onCreateView(
@@ -110,6 +115,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         super.onViewCreated(view, savedInstanceState)
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        toggleButton.textOff = null
+        toggleButton.textOn = null
+        toggleButton.text = null
+        toggleButton.visibility = View.VISIBLE
 
         mFirestore = FirebaseFirestore.getInstance()
 
@@ -199,14 +209,48 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                         tv_goal.setTextColor(Color.parseColor("#81C784"))
                     }
 
-                    chronometer.base = SystemClock.elapsedRealtime()+stopTime
-                    chronometer.start()
                     timer = Timer()
+                    val raisedAlert = AlertDialog.Builder(context)
+                    var testDialog: AlertDialog? = null
                     val task = object: TimerTask() {
                         override fun run() {
-                            println("timer passed ${++timesRan} time(s)")
+//                            println("timer passed ${++timesRan} time(s)")
                             calculateLatLng()
+                            if(speed.toInt() > 40) {
+                                if(!tooFast) {
+                                    tooFast = true
+                                    stopTime = chronometer.base - SystemClock.elapsedRealtime()
+                                    chronometer.stop()
+                                    activity?.runOnUiThread {
+//                                       testDialog = raisedAlert.setTitle("Training is paused, speed too high")
+//                                           ?.setPositiveButton("Resume") { dialog, _ ->
+//                                               chronometer.base = SystemClock.elapsedRealtime()+stopTime
+//                                               chronometer.start()
+//                                               calculateLatLng()
+//                                               tooFast = false
+//                                               dialog.cancel()
+//                                           }
+//                                           ?.setCancelable(false)?.show()
+                                        testDialog = raisedAlert.setTitle("Training is paused, speed too high").setMessage("")
+                                            ?.setCancelable(false)?.show()
+                                    }
+                                }
+                            }
+                            else {
+                                if(tooFast) {
+                                    activity?.runOnUiThread {
+                                        chronometer.base = SystemClock.elapsedRealtime() + stopTime
+                                        chronometer.start()
+                                    }
+                                    testDialog?.cancel()
+                                }
+                                tooFast = false
+                            }
                         }
+                    }
+                    if(testDialog == null) {
+                        chronometer.base = SystemClock.elapsedRealtime()+stopTime
+                        chronometer.start()
                     }
                     timer!!.schedule(task, 0, 1000)
                 }
@@ -215,6 +259,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     val raisedVal = (kotlin.math.floor(distanceKm) * valueKn.toDouble()).toInt()
                     val raisedAlert = AlertDialog.Builder(context)
                     Firebase.databaseUsers!!.child(userId).child("inTraining").setValue(false)
+
+                    activeUsersMarkers.forEach { (s, marker) ->
+                        marker.isVisible = false
+                    }
 
                     if(raisedVal > 0) {
                         raisedAlert.setTitle("Congratulations!")
@@ -239,6 +287,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     latLngArray.add(currentLatLng)
                     stopTime = chronometer.base-SystemClock.elapsedRealtime()
                     zoomRoute(mMap, latLngArray)
+                    stopTime = 0
                     chronometer.stop()
                     timer?.cancel()
 
@@ -252,7 +301,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     reset_layout.visibility = View.GONE
                     circle = null
                     tv_goal.setTextColor(Color.parseColor("#E57373"))
-
+                    kmNotificationFlag = false
                     mMap.clear()
 
                     var sumMoneyRaised = ""
@@ -297,6 +346,25 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                             }
                         }
                     }, Looper.getMainLooper())
+                }
+                donate_btn.setOnClickListener {
+                    var sumMoneyRaised = ""
+                    Firebase.databaseUsers?.child("$userId/fund")?.addListenerForSingleValueEvent(object: ValueEventListener {
+                        override fun onCancelled(error: DatabaseError) {
+                        }
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            sumMoneyRaised = snapshot.value.toString()
+                            sumMoneyRaised =
+                                (sumMoneyRaised.toInt() + raisedVal).toString()
+                            Firebase.databaseUsers?.child("$userId/fund")?.setValue(sumMoneyRaised)
+                            raisedVal = 0
+//                            startActivity(Intent(requireContext(), DonateFragment::class.java))
+                            toggleButton.visibility = View.GONE
+                            activity?.supportFragmentManager
+                                ?.beginTransaction()?.replace(R.id.fragment_home, DonateFragment())
+                                ?.commit()
+                        }
+                    })
                 }
             }
             //cancel button click of custom layout
@@ -363,6 +431,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     Firebase.databaseUsers!!.child(userId).child("lastLng").setValue(currentLatLng.longitude)
 //                    geoFire.setLocation(userId, GeoLocation(currentLatLng.latitude, currentLatLng.longitude))
                     marker.position = currentLatLng
+
+                    if (toggleButton.isChecked) {
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, mMap.cameraPosition.zoom))
+                    }
+
                     addCircleArea()
                     distance(previousLatLng, currentLatLng)
                 }
@@ -419,7 +492,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
 
         if(circle == null) {
-            circle = mMap.addCircle(CircleOptions().center(currentLatLng).radius(500.0).strokeColor(Color.BLUE).fillColor(0x220000FF).strokeWidth(5.0f))
+            circle = mMap.addCircle(CircleOptions().center(currentLatLng).radius(500.0).strokeColor(Color.BLUE).fillColor(0x200000FF).strokeWidth(0.0f))
         }
 
         circle?.center = currentLatLng
@@ -482,35 +555,44 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         location2.longitude = end.longitude
         val distance_tmp = location1.distanceTo(location2)
 
-        val lineoption = PolylineOptions()
-        lineoption.add(start, end)
-        lineoption.width(10f)
-        lineoption.color(Color.BLUE)
-        lineoption.geodesic(true)
-        mMap.addPolyline(lineoption)
-//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(end, 25.0f))
-        distance += distance_tmp
-        distanceKm = distance/1000
         speed = (distance_tmp * 3.6).toFloat()
-        if(distance > 999) {
-            distanceKm = distance/1000
-            distanceKm = BigDecimal(distanceKm.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
-            tv_distance.text = distanceKm.toString() + " km"
-        }
-        else {
-            distance = BigDecimal(distance.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
-            tv_distance.text = distance.toString() + " m"
-        }
-
-        if(distanceKm.toDouble() >= kilometers.toDouble()) {
-            tv_goal.setTextColor(Color.parseColor("#81C784"))
-        }
         speed = BigDecimal(speed.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
-        speedArray.add(speed)
-        tv_speed.text = speed.toString() + " km/h"
 
-        raisedVal = (kotlin.math.floor(distanceKm) * valueKn.toDouble()).toInt()
-        tv_money_raised.text = raisedVal.toString() + " kn"
+        if(speed.toInt() < 40) {
+            val lineoption = PolylineOptions()
+            lineoption.add(start, end)
+            lineoption.width(10f)
+            lineoption.color(Color.BLUE)
+            lineoption.geodesic(true)
+            mMap.addPolyline(lineoption)
+//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(end, 25.0f))
+            distance += distance_tmp
+            distanceKm = distance / 1000
+            if (distance > 999) {
+                distanceKm = distance / 1000
+                distanceKm =
+                    BigDecimal(distanceKm.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
+                tv_distance.text = distanceKm.toString() + " km"
+            } else {
+                distance =
+                    BigDecimal(distance.toDouble()).setScale(2, RoundingMode.HALF_EVEN).toFloat()
+                tv_distance.text = distance.toString() + " m"
+            }
+
+            if (distanceKm.toDouble() >= kilometers.toDouble()) {
+                if (!kmNotificationFlag) {
+                    sendNotification("Congrats!", "You reached your desired mileage.")
+                    kmNotificationFlag = true
+                }
+                tv_goal.setTextColor(Color.parseColor("#81C784"))
+            }
+
+            speedArray.add(speed)
+            tv_speed.text = speed.toString() + " km/h"
+
+            raisedVal = (kotlin.math.floor(distanceKm) * valueKn.toDouble()).toInt()
+            tv_money_raised.text = raisedVal.toString() + " kn"
+        }
         previousLatLng = end
     }
 
@@ -689,10 +771,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         timesRan = 0
         latLngArray = ArrayList()
         speedArray = ArrayList()
-
-        activeUsersMarkers.forEach { (s, marker) ->
-            marker.isVisible = false
-        }
     }
 
     private fun zoomRoute(
@@ -704,10 +782,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         for (latLngPoint in lstLatLngRoute) boundsBuilder.include(
             latLngPoint
         )
-        val routePadding = 100
+        val routePadding = 200
         val latLngBounds: LatLngBounds = boundsBuilder.build()
+        googleMap.setPadding(10,10,10, 10)
         googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds, routePadding))
-        googleMap.setPadding(10,10,10,10)
         Timer("Loading Map", false).schedule(2000) {
             snapShot()
         }

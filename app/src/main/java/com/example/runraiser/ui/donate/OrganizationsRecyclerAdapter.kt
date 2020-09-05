@@ -84,68 +84,88 @@ class OrganizationsRecyclerAdapter : RecyclerView.Adapter<RecyclerView.ViewHolde
                 .load(organizationCard.imageUrl)
                 .into(image)
 
+
             select.setOnClickListener {
                 val mDialogView = LayoutInflater.from(itemView.context).inflate(R.layout.donation_dialog, null)
                 val mBuilder = AlertDialog.Builder(itemView.context)
                     .setView(mDialogView)
                     .setTitle("Enter the amount of money you want to donate:")
 
-                val  mAlertDialog = mBuilder.show()
+                if(DonateFragment.fund < 1)  Toast.makeText(itemView.context, "You don't have enough money to donate :(", Toast.LENGTH_SHORT).show()
 
-                mDialogView.et_donation_money.setText(DonateFragment.fund.toString())
-                mDialogView.et_donation_money.filters =
-                    arrayOf<InputFilter>(InputFilterMinMax("1", DonateFragment.fund.toString()))
+                else {
+                    val mAlertDialog = mBuilder.show()
 
-                mDialogView.ok_btn.setOnClickListener {
-                    if(mDialogView.et_donation_money.text.isNotEmpty()) {
-                        val donationMoney = mDialogView.et_donation_money.text.toString().toInt()
-                        val newFund = DonateFragment.fund - donationMoney
-                        val ref =  Firebase.databaseUsers?.child(FirebaseAuth.getInstance().uid!!)
-                       ref?.child("sumDonationsMoney")
-                            ?.addListenerForSingleValueEvent(object: ValueEventListener {
-                                override fun onCancelled(error: DatabaseError) {
-                                }
-                                override fun onDataChange(snapshot: DataSnapshot) {
-                                    val sum = snapshot.value.toString().toInt() + donationMoney
-                                   ref.child("sumDonationsMoney").setValue(sum)
-                                }
-                            })
-                        ref?.child("fund")?.setValue(newFund)
+                    mDialogView.et_donation_money.setText(DonateFragment.fund.toString())
+                    mDialogView.et_donation_money.filters =
+                        arrayOf<InputFilter>(InputFilterMinMax("1", DonateFragment.fund.toString()))
 
-                        Toast.makeText(itemView.context, "You donated ${donationMoney} kn to ${organizationCard.name}! :D", Toast.LENGTH_SHORT).show()
+                    mDialogView.ok_btn.setOnClickListener {
+                        if (mDialogView.et_donation_money.text.isNotEmpty() || mDialogView.et_donation_money.toString()
+                                .toInt() != 0
+                        ) {
+                            val donationMoney =
+                                mDialogView.et_donation_money.text.toString().toInt()
+                            val newFund = DonateFragment.fund - donationMoney
+                            val ref =
+                                Firebase.databaseUsers?.child(FirebaseAuth.getInstance().uid!!)
+                            ref?.child("sumDonationsMoney")
+                                ?.addListenerForSingleValueEvent(object : ValueEventListener {
+                                    override fun onCancelled(error: DatabaseError) {
+                                    }
 
-                        val donationId = UUID.randomUUID().toString().replace("-", "").toUpperCase(
-                            Locale.ROOT)
+                                    override fun onDataChange(snapshot: DataSnapshot) {
+                                        val sum = snapshot.value.toString().toInt() + donationMoney
+                                        ref.child("sumDonationsMoney").setValue(sum)
+                                    }
+                                })
+                            ref?.child("fund")?.setValue(newFund)
+                            DonateFragment.fund = newFund
 
-                        Firebase.databaseDonations?.child(donationId)?.child("organizationName")?.setValue(organizationCard.name)
-                        Firebase.databaseDonations?.child(donationId)?.child("moneyDonated")?.setValue(donationMoney)
-                        Firebase.databaseDonations?.child(donationId)?.child("organizationImage")?.setValue(organizationCard.imageUrl)
+                            Toast.makeText(
+                                itemView.context,
+                                "You donated ${donationMoney} kn to ${organizationCard.name}! :D",
+                                Toast.LENGTH_SHORT
+                            ).show()
 
-                        var startDate: String?
-                        startDate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            val current = LocalDateTime.now()
-                            val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
-                            current.format(formatter)
+                            val donationId =
+                                UUID.randomUUID().toString().replace("-", "").toUpperCase(
+                                    Locale.ROOT
+                                )
+
+                            Firebase.databaseDonations?.child(donationId)?.child("organizationName")
+                                ?.setValue(organizationCard.name)
+                            Firebase.databaseDonations?.child(donationId)?.child("moneyDonated")
+                                ?.setValue(donationMoney)
+                            Firebase.databaseDonations?.child(donationId)
+                                ?.child("organizationImage")?.setValue(organizationCard.imageUrl)
+
+                            var startDate: String?
+                            startDate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                val current = LocalDateTime.now()
+                                val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
+                                current.format(formatter)
+                            } else {
+                                val date = Date()
+                                val formatter = SimpleDateFormat("dd.MM.yyyy HH:mm")
+                                formatter.format(date)
+                            }
+
+                            Firebase.databaseDonations?.child(donationId)?.child("date")
+                                ?.setValue(startDate)
+                            Firebase.databaseDonations?.child(donationId)?.child("userId")
+                                ?.setValue(FirebaseAuth.getInstance().uid!!)
+                            mAlertDialog.dismiss()
                         } else {
-                            val date = Date()
-                            val formatter = SimpleDateFormat("dd.MM.yyyy HH:mm")
-                            formatter.format(date)
+                            mDialogView.et_donation_money.error
+                            mDialogView.et_donation_money.requestFocus()
                         }
+                    }
 
-                        Firebase.databaseDonations?.child(donationId)?.child("date")?.setValue(startDate)
-                        Firebase.databaseDonations?.child(donationId)?.child("userId")?.setValue(FirebaseAuth.getInstance().uid!!)
+                    mDialogView.cancel_btn.setOnClickListener {
                         mAlertDialog.dismiss()
                     }
-                    else {
-                        mDialogView.et_donation_money.error
-                        mDialogView.et_donation_money.requestFocus()
-                    }
                 }
-
-                mDialogView.cancel_btn.setOnClickListener {
-                    mAlertDialog.dismiss()
-                }
-
             }
         }
     }
